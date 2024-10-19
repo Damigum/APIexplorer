@@ -1,38 +1,149 @@
+@import url("https://fonts.googleapis.com/css2?family=Karla:ital,wght@0,200..800;1,200..800&family=Lora:ital,wght@0,400..700;1,400..700&family=Manrope:wght@200..800&family=Outfit:wght@100..900&family=Rubik:ital,wght@0,300..900;1,300..900&display=swap" rel="stylesheet");
+
+body {
+  background-color: #edf2f4;
+}
+
 .App {
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: 'Karla', sans-serif;
+}
+
+h1 {
   text-align: center;
+  margin-bottom: 30px;
+  color: #333;
+  font-family: 'Karla', cursive;
+  font-size: 2.5em;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.api-list {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 30px;
+  justify-content: center;
+  max-width: 750px;
+  margin: 0 auto;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
-}
-
-.App-header {
-  background-color: #282c34;
-  min-height: 100vh;
+.api-card {
+  width: 240px;
+  height: 115px;
+  background: #fff;
+  box-shadow: 0 1px 25px rgba(0,0,0,0.2);
+  border-radius: 10px;
+  padding: 15px;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
   display: flex;
   flex-direction: column;
+  cursor: pointer;
+}
+
+.api-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 30px rgba(0,0,0,0.3);
+}
+
+.card_load {
+  width: 50px;
+  height: 50px;
+  position: absolute;
+  top: 50%;
+  left: 15px;
+  transform: translateY(-50%);
+  background: linear-gradient(120deg, #e5e5e5 30%, #f0f0f0 38%, #f0f0f0 40%, #e5e5e5 48%);
+  border-radius: 50%;
+  background-size: 200% 100%;
+  background-position: 100% 0;
+  animation: load89234 2s infinite;
+}
+
+.api-content {
+  margin-left: 70px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.api-name {
+  font-family: 'Rubik', cursive;
+  font-weight: 700;
+  color: #333;
+  font-size: 1em;
+  margin-bottom: 5px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.api-description {
+  font-size: 0.8em;
+  color: #666;
+  flex-grow: 1;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+.category {
+  font-family: 'Lora', cursive;
+  font-size: 0.6em;
+  font-weight: 700;
+  color: #000000;
+  text-transform: uppercase;
+  padding: 3px 0;
+  margin-bottom: 12px;
+  margin-left: 0px;
+  align-self: flex-start;
+  display: flex;
   align-items: center;
+}
+
+.category::before {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 5px;
+  background-color: var(--category-color);
+}
+
+@keyframes load89234 {
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+.pagination {
+  display: flex;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+  list-style-type: none;
+  padding: 0;
+  margin-top: 30px;
 }
 
-.App-link {
-  color: #61dafb;
+.pagination li {
+  margin: 0 5px;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.pagination button {
+  font-family: 'Nunito', sans-serif;
+  padding: 5px 10px;
+  border: 1px solid #000000;
+  background-color: white;
+  color: #2e0baf;
+  cursor: pointer;
+  border-radius: 20px;
+  transition: all 0.3s ease;
+}
+
+.pagination button:hover, .pagination li.active button {
+  background-color: #ffd900;
+  color: rgb(0, 0, 0);
 }
