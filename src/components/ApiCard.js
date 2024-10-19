@@ -1,6 +1,16 @@
+// src/components/ApiCard.js
 import React from 'react';
+import { useDrag } from 'react-dnd';
 
 const ApiCard = ({ api, getCategoryColor }) => {
+  const [{ isDragging }, drag] = useDrag({
+    type: 'API_CARD',
+    item: () => ({ api }),
+    collect: (monitor) => ({
+      isDragging: !!monitor.isDragging(),
+    }),
+  });
+
   const handleClick = () => {
     window.open(api.URL, '_blank', 'noopener,noreferrer');
   };
@@ -8,7 +18,12 @@ const ApiCard = ({ api, getCategoryColor }) => {
   const categoryColor = api.Category ? getCategoryColor(api.Category) : "#000000";
 
   return (
-    <div className="api-card" onClick={handleClick}>
+    <div
+      ref={drag}
+      className={`api-card ${isDragging ? 'dragging' : ''}`}
+      onClick={handleClick}
+      style={{ opacity: isDragging ? 0.5 : 1 }}
+    >
       <div className="card_load"></div>
       <div className="api-content">
         <div className="api-name">{api.Name}</div>
@@ -24,3 +39,7 @@ const ApiCard = ({ api, getCategoryColor }) => {
 };
 
 export default ApiCard;
+
+
+
+
