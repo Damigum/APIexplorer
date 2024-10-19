@@ -1,12 +1,16 @@
-@import url("https://fonts.googleapis.com/css2?family=Karla:ital,wght@0,200..800;1,200..800&family=Lora:ital,wght@0,400..700;1,400..700&family=Manrope:wght@200..800&family=Outfit:wght@100..900&family=Rubik:ital,wght@0,300..900;1,300..900&display=swap" rel="stylesheet");
+/* App.css */
+
+/* Font import for the page */
+@import url("https://fonts.googleapis.com/css2?family=Karla:ital,wght@0,200..800;1,200..800&family=Lora:ital,wght@0,400..700;1,400..700&family=Manrope:wght@200..800&family=Outfit:wght@100..900&family=Rubik:ital,wght@0,300..900;1,300..900&display=swap");
 
 body {
   background-color: #edf2f4;
+  margin: 0;
+  padding: 0;
 }
 
 .App {
-  max-width: 1300px;
-  margin: 0 auto;
+  max-width: 100%;
   padding: 20px;
   font-family: 'Karla', sans-serif;
 }
@@ -19,12 +23,126 @@ h1 {
   font-size: 2.5em;
 }
 
+.main-container {
+  display: flex;
+  height: calc(100vh - 100px);
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.api-list-container {
+  width: 100%;
+  transition: width 0.3s ease;
+  overflow-y: auto;
+  padding-right: 20px;
+  height: 100%;
+}
+
+.node-window {
+  width: 30px;
+  height: 100%;
+  transition: all 0.3s ease;
+  position: relative;
+  right: 0;
+  top: 0;
+  background-color: #f5f5f5;
+  opacity: 0;
+  overflow: hidden;
+}
+
+.node-window.show {
+  opacity: 1;
+  width: 150px;
+}
+
+.node-window.expanded {
+  width: 50%;
+  opacity: 1;
+}
+
+.main-container.expanded .api-list-container {
+  width: 50%;
+}
+
+.main-container.expanded .node-window {
+  width: 50%;
+}
+
+.ai-interface-wrapper {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  pointer-events: none;
+}
+
+.ai-interface-toggle {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 11;
+  pointer-events: auto;
+}
+
+.ai-interface {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  width: 300px;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  z-index: 11;
+  pointer-events: auto;
+}
+
+.ai-interface h3 {
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+.ai-interface textarea {
+  width: 100%;
+  height: 100px;
+  margin-bottom: 10px;
+  padding: 5px;
+  resize: vertical;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+}
+
+.ai-interface button {
+  display: block;
+  width: 100%;
+  padding: 8px;
+  background-color: #2d302d;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+}
+
+.ai-interface button:hover {
+  background-color: #45a049;
+}
+
+.ai-interface button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
 .api-list {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, 1fr); /* Changed back to 3 columns */
   gap: 30px;
   justify-content: center;
-  max-width: 750px;
+  max-width: 900px; /* Adjusted back to accommodate 3 cards */
   margin: 0 auto;
 }
 
@@ -32,7 +150,7 @@ h1 {
   width: 240px;
   height: 115px;
   background: #fff;
-  box-shadow: 0 1px 25px rgba(0,0,0,0.2);
+  box-shadow: 0 1px 25px rgba(0, 0, 0, 0.2);
   border-radius: 10px;
   padding: 15px;
   position: relative;
@@ -45,7 +163,11 @@ h1 {
 
 .api-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 5px 30px rgba(0,0,0,0.3);
+  box-shadow: 0 5px 30px rgba(0, 0, 0, 0.3);
+}
+
+.api-card.dragging {
+  opacity: 0.5;
 }
 
 .card_load {
@@ -114,36 +236,114 @@ h1 {
   background-color: var(--category-color);
 }
 
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  list-style-type: none;
+  padding: 0;
+  margin-top: 20px;
+  max-width: 900px; /* Match the max-width of the api-list */
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.pagination li {
+  margin: 2px;
+}
+
+.pagination button {
+  font-family: 'Nunito', sans-serif;
+  padding: 3px 8px;
+  border: 1px solid #000000;
+  background-color: white;
+  color: #2e0baf;
+  cursor: pointer;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  font-size: 0.8em;
+}
+
+.pagination button:hover,
+.pagination li.active button {
+  background-color: #ffd900;
+  color: rgb(0, 0, 0);
+}
+
+.api-node {
+  padding: 10px;
+  border-radius: 5px;
+  background-color: white;
+  border: 1px solid #ccc;
+  width: 200px;
+}
+
+.api-node-content {
+  font-size: 12px;
+}
+
+.api-node-name {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.api-node-category {
+  font-style: italic;
+  margin-bottom: 5px;
+}
+
+.api-node-description {
+  font-size: 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+}
+
+/* Overlay for Drop Hint */
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5em;
+  color: #333;
+  pointer-events: none;
+}
+
+/* Loader keyframe animation */
 @keyframes load89234 {
   100% {
     background-position: -100% 0;
   }
 }
 
-.pagination {
-  display: flex;
-  justify-content: center;
-  list-style-type: none;
-  padding: 0;
-  margin-top: 30px;
+/* General styling for React Flow */
+.react-flow__renderer {
+  width: 100%;
+  height: 100%;
 }
 
-.pagination li {
-  margin: 0 5px;
+.react-flow__background {
+  background-color:  #f3f8fa;;
 }
 
-.pagination button {
-  font-family: 'Nunito', sans-serif;
-  padding: 5px 10px;
-  border: 1px solid #000000;
-  background-color: white;
-  color: #2e0baf;
-  cursor: pointer;
-  border-radius: 20px;
-  transition: all 0.3s ease;
+.ai-response {
+  margin-top: 15px;
+  border-top: 1px solid #eee;
+  padding-top: 10px;
+  max-height: 200px;
+  overflow-y: auto;
 }
 
-.pagination button:hover, .pagination li.active button {
-  background-color: #ffd900;
-  color: rgb(0, 0, 0);
+.ai-response h4 {
+  margin-top: 0;
+  margin-bottom: 5px;
 }
