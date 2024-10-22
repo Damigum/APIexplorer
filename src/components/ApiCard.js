@@ -1,14 +1,15 @@
-// src/components/ApiCard.js
 import React from 'react';
 import { useDrag } from 'react-dnd';
 
-const ApiCard = ({ api, getCategoryColor }) => {
+const ApiCard = ({ api, getCategoryColor, onDragStart, onDragEnd }) => {
   const [{ isDragging }, drag] = useDrag({
     type: 'API_CARD',
     item: () => ({ api }),
     collect: (monitor) => ({
       isDragging: !!monitor.isDragging(),
     }),
+    begin: onDragStart,
+    end: onDragEnd,
   });
 
   const handleClick = () => {
