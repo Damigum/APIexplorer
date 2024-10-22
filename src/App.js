@@ -102,9 +102,11 @@ function App() {
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <div className="App">
+    <div className="App">
+      <div className="header-container">
         <h1>API Explorer</h1>
-        <div className={`main-container ${isNodeWindowExpanded ? 'expanded' : ''}`}>
+      </div>
+      <div className={`main-container ${isNodeWindowExpanded ? 'expanded' : ''}`}>
           <div className="api-list-container">
             <ApiList 
               apis={currentApis} 
@@ -143,6 +145,7 @@ function App() {
 }
 
 export default App;
+
 
 
 
