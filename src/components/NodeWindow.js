@@ -6,6 +6,7 @@ import ReactFlow, {
   applyEdgeChanges,
   addEdge,
 } from 'react-flow-renderer';
+import { Minimize2 } from 'lucide-react';
 import ApiNode from './ApiNode';
 import { useDrop } from 'react-dnd';
 import AiInterface from './AiInterface';
@@ -14,22 +15,55 @@ const nodeTypes = {
   apiNode: ApiNode,
 };
 
-const NodeWindow = ({ nodes, edges, setNodes, setEdges, onApiDrop, show, isExpanded, onDragOver, onDragLeave }) => {
+const NodeWindow = ({ 
+  nodes, 
+  edges, 
+  setNodes, 
+  setEdges, 
+  onApiDrop, 
+  show, 
+  isExpanded, 
+  setIsNodeWindowExpanded, 
+  onDragOver, 
+  onDragLeave,
+  onMouseEnter,
+  onMouseLeave,
+  isDraggingApiCard
+}) => {
   const nodeWindowRef = useRef(null);
   const [showAiInterface, setShowAiInterface] = useState(false);
+
+  useEffect(() => {
+    if (nodes.length > 0 && !isExpanded) {
+      setIsNodeWindowExpanded(true);
+    }
+    if (nodes.length === 0 && isExpanded) {
+      setIsNodeWindowExpanded(false);
+    }
+  }, [nodes.length, isExpanded, setIsNodeWindowExpanded]);
 
   const [, drop] = useDrop({
     accept: 'API_CARD',
     drop: (item, monitor) => {
       const api = item.api;
+      
+      const windowRect = nodeWindowRef.current.getBoundingClientRect();
       const clientOffset = monitor.getClientOffset();
+      
+      const position = {
+        x: clientOffset.x - windowRect.left,
+        y: clientOffset.y - windowRect.top
+      };
 
-      if (nodeWindowRef.current && clientOffset) {
-        const boundingRect = nodeWindowRef.current.getBoundingClientRect();
-        const x = clientOffset.x - boundingRect.left;
-        const y = clientOffset.y - boundingRect.top;
-        onApiDrop(api, { x, y });
-      }
+      const flowInstance = nodeWindowRef.current.querySelector('.react-flow').getBoundingClientRect();
+      const zoom = flowInstance ? flowInstance.width / windowRect.width : 1;
+
+      const adjustedPosition = {
+        x: position.x / zoom,
+        y: position.y / zoom
+      };
+
+      onApiDrop(api, adjustedPosition);
     },
     hover: (item, monitor) => {
       onDragOver();
@@ -52,34 +86,92 @@ const NodeWindow = ({ nodes, edges, setNodes, setEdges, onApiDrop, show, isExpan
     setEdges((eds) => addEdge(params, eds));
   };
 
+  const removeNode = (nodeId) => {
+    setNodes((nds) => nds.filter((node) => node.id !== nodeId));
+    setEdges((eds) => eds.filter(
+      (edge) => edge.source !== nodeId && edge.target !== nodeId
+    ));
+  };
+
+  const decoratedNodes = nodes.map(node => ({
+    ...node,
+    data: {
+      ...node.data,
+      onRemove: () => removeNode(node.id)
+    }
+  }));
+
   return (
     <div 
       ref={nodeWindowRef} 
-      className={`node-window ${show ? 'show' : ''} ${isExpanded ? 'expanded' : ''}`}
+      className={`node-window ${show || isDraggingApiCard ? 'show' : ''} ${isExpanded ? 'expanded' : ''}`}
       onDragLeave={onDragLeave}
+      onMouseEnter={onMouseEnter}
+      onMouseLeave={onMouseLeave}
+      style={{ overflow: isExpanded ? 'visible' : 'hidden' }}
     >
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
-        nodeTypes={nodeTypes}
-        fitView
-      >
-        <Background />
-        <Controls />
-      </ReactFlow>
       {isExpanded && (
-        <div className="ai-interface-wrapper">
-          <div className="ai-interface-toggle">
-            <button onClick={() => setShowAiInterface(!showAiInterface)}>
-              {showAiInterface ? 'Hide AI Interface' : 'Show AI Interface'}
-            </button>
-          </div>
-          {showAiInterface && <AiInterface />}
+        <div 
+          style={{
+            position: 'absolute',
+            top: '-12px',
+            right: '12px',
+            zIndex: 1000,
+          }}
+        >
+          <button 
+            onClick={() => setIsNodeWindowExpanded(false)}
+            style={{
+              background: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              padding: '6px',
+              cursor: 'pointer',
+              boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'all 0.2s ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-1px)';
+              e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 2px 6px rgba(0,0,0,0.1)';
+            }}
+          >
+            <Minimize2 size={18} color="#666" />
+          </button>
         </div>
       )}
+      <div className="node-window-content" style={{ width: '100%', height: '100%' }}>
+        <ReactFlow
+          nodes={decoratedNodes}
+          edges={edges}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          onConnect={onConnect}
+          nodeTypes={nodeTypes}
+          defaultZoom={1}
+          defaultViewport={{ x: 0, y: 0, zoom: 1 }}
+          fitView={false}
+        >
+          <Background />
+          <Controls />
+        </ReactFlow>
+        {isExpanded && (
+          <div className="ai-interface-wrapper">
+            <div className="ai-interface-toggle">
+              <button onClick={() => setShowAiInterface(!showAiInterface)}>
+                {showAiInterface ? 'Hide AI Interface' : 'Show AI Interface'}
+              </button>
+            </div>
+            {showAiInterface && <AiInterface />}
+          </div>
+        )}
+      </div>
     </div>
   );
 };
