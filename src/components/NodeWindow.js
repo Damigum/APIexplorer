@@ -1,4 +1,4 @@
-// NodeWindow.js
+//NodeWindow.js
 import React, { useRef, useEffect } from 'react';
 import ReactFlow, {
   Background,

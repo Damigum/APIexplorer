@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { Send } from 'lucide-react';
 
 const systemPromptFeedback = `You are an AI assistant specialized in generating creative ideas for applications and tools that combine multiple APIs. When presented with a set of APIs, suggest innovative ways to combine them into useful applications or tools. Focus on practical, realizable ideas that leverage the unique features of each API. Keep suggestions concise but specific, highlighting the key features and potential user benefits. If the combination of APIs changes, adapt your suggestions accordingly.`;
 
