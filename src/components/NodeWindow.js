@@ -11,6 +11,34 @@ import { Minimize2 } from 'lucide-react';
 import ApiNode from './ApiNode';
 import { useDrop } from 'react-dnd';
 import AiInterface from './AiInterface';
+import { v4 as uuidv4 } from 'uuid';
+
+const UserIdeaInput = ({ onSubmit }) => {
+  const [userIdea, setUserIdea] = React.useState('');
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (userIdea.trim()) {
+      onSubmit(userIdea);
+      setUserIdea('');
+    }
+  };
+
+  return (
+    <div className="user-idea-input">
+      <form onSubmit={handleSubmit}>
+        <input
+          type="text"
+          value={userIdea}
+          onChange={(e) => setUserIdea(e.target.value)}
+          placeholder="Describe your project idea..."
+          aria-label="Project idea input"
+        />
+        <button type="submit">Suggest APIs</button>
+      </form>
+    </div>
+  );
+};
 
 const nodeTypes = {
   apiNode: ApiNode,
@@ -22,20 +50,16 @@ const NodeWindow = ({
   setNodes, 
   setEdges, 
   onApiDrop, 
-  show, 
   isExpanded, 
   setIsNodeWindowExpanded, 
-  onDragOver, 
-  onDragLeave,
-  onMouseEnter,
-  onMouseLeave,
-  isDraggingApiCard
+  isDraggingApiCard,
+  apis
 }) => {
   const nodeWindowRef = useRef(null);
   const [activeNodes, setActiveNodes] = React.useState([]);
+  const [aiMode, setAiMode] = React.useState('node-to-idea');
 
   useEffect(() => {
-    // Update activeNodes whenever nodes change
     const nodeData = nodes.map(node => ({
       name: node.data.api.Name,
       description: node.data.api.Description,
@@ -76,10 +100,8 @@ const NodeWindow = ({
       };
 
       onApiDrop(api, adjustedPosition);
-    },
-    hover: (item, monitor) => {
-      onDragOver();
-    },
+      setAiMode('node-to-idea');
+    }
   });
 
   useEffect(() => {
@@ -105,6 +127,32 @@ const NodeWindow = ({
     ));
   };
 
+  const addNode = (api) => {
+    const position = {
+      x: Math.random() * 300,
+      y: Math.random() * 300
+    };
+
+    const newNode = {
+      id: uuidv4(),
+      type: 'apiNode',
+      position,
+      data: { 
+        api,
+        onRemove: () => removeNode(newNode.id)
+      },
+    };
+
+    setNodes((nds) => [...nds, newNode]);
+  };
+
+  const handleIdeaSubmit = (idea) => {
+    setAiMode('idea-to-node');
+    // Clear existing nodes when starting a new idea
+    setNodes([]);
+    setEdges([]);
+  };
+
   const decoratedNodes = nodes.map(node => ({
     ...node,
     data: {
@@ -113,73 +161,80 @@ const NodeWindow = ({
     }
   }));
 
+  const showWindow = isDraggingApiCard || isExpanded || nodes.length > 0;
+
   return (
-    <div 
-      ref={nodeWindowRef} 
-      className={`node-window ${show || isDraggingApiCard ? 'show' : ''} ${isExpanded ? 'expanded' : ''}`}
-      onDragLeave={onDragLeave}
-      onMouseEnter={onMouseEnter}
-      onMouseLeave={onMouseLeave}
-      style={{ overflow: isExpanded ? 'visible' : 'hidden' }}
-    >
-      {isExpanded && (
-        <div 
-          style={{
-            position: 'absolute',
-            top: '-12px',
-            right: '12px',
-            zIndex: 1000,
-          }}
-        >
-          <button 
-            onClick={() => setIsNodeWindowExpanded(false)}
+    <>
+      <div 
+        ref={nodeWindowRef} 
+        className={`node-window ${showWindow ? 'show' : ''} ${isExpanded ? 'expanded' : ''}`}
+        style={{ overflow: isExpanded ? 'visible' : 'hidden' }}
+      >
+        {isExpanded && (
+          <div 
             style={{
-              background: 'white',
-              border: 'none',
-              borderRadius: '6px',
-              padding: '6px',
-              cursor: 'pointer',
-              boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'all 0.2s ease',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-1px)';
-              e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 2px 6px rgba(0,0,0,0.1)';
+              position: 'absolute',
+              top: '-12px',
+              right: '12px',
+              zIndex: 1000,
             }}
           >
-            <Minimize2 size={18} color="#666" />
-          </button>
-        </div>
-      )}
-      <div className="node-window-content" style={{ width: '100%', height: '100%', position: 'relative' }}>
-        <ReactFlow
-          nodes={decoratedNodes}
-          edges={edges}
-          onNodesChange={onNodesChange}
-          onEdgesChange={onEdgesChange}
-          onConnect={onConnect}
-          nodeTypes={nodeTypes}
-          defaultZoom={1}
-          defaultViewport={{ x: 0, y: 0, zoom: 1 }}
-          fitView={false}
-        >
-          <Background />
-          <Controls />
-        </ReactFlow>
-        {isExpanded && nodes.length > 0 && (
-          <div className="ai-interface-wrapper">
-            <AiInterface activeNodes={activeNodes} />
+            <button 
+              onClick={() => setIsNodeWindowExpanded(false)}
+              style={{
+                background: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                padding: '6px',
+                cursor: 'pointer',
+                boxShadow: '0 2px 6px rgba(0,0,0,0.1)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-1px)';
+                e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 2px 6px rgba(0,0,0,0.1)';
+              }}
+            >
+              <Minimize2 size={18} color="#666" />
+            </button>
           </div>
         )}
+        <div className="node-window-content" style={{ width: '100%', height: '100%', position: 'relative' }}>
+          <ReactFlow
+            nodes={decoratedNodes}
+            edges={edges}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            onConnect={onConnect}
+            nodeTypes={nodeTypes}
+            defaultZoom={1}
+            defaultViewport={{ x: 0, y: 0, zoom: 1 }}
+            fitView={false}
+          >
+            <Background />
+            <Controls />
+          </ReactFlow>
+          {isExpanded && (
+            <div className="ai-interface-wrapper">
+              <AiInterface 
+                activeNodes={activeNodes} 
+                onAddNode={addNode}
+                apis={apis}
+                mode={aiMode}
+              />
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+      <UserIdeaInput onSubmit={handleIdeaSubmit} />
+    </>
   );
 };
 
