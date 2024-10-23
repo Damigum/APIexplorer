@@ -1,71 +1,76 @@
-import React, { useState } from 'react';
+// AiInterface.js
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
-const systemPromptFeedback = `You are an AI assistant specialized in APIs and web development. Your role is to provide helpful information, explanations, and suggestions related to APIs, their usage, and integration in web applications. Please be concise, accurate, and provide practical advice when possible.`;
+const systemPromptFeedback = `You are an AI assistant specialized in generating creative ideas for applications and tools that combine multiple APIs. When presented with a set of APIs, suggest innovative ways to combine them into useful applications or tools. Focus on practical, realizable ideas that leverage the unique features of each API. Keep suggestions concise but specific, highlighting the key features and potential user benefits. If the combination of APIs changes, adapt your suggestions accordingly.`;
 
-const AiInterface = () => {
-  const [input, setInput] = useState('');
+const AiInterface = ({ activeNodes }) => {
   const [response, setResponse] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsLoading(true);
-
-    try {
-      const result = await axios.post(
-        'https://api.groq.com/openai/v1/chat/completions',
-        {
-          model: 'llama-3.1-70b-versatile',
-          messages: [
-            { role: 'system', content: systemPromptFeedback },
-            { role: 'user', content: input }
-          ],
-          max_tokens: 500,
-          temperature: 0.3,
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${process.env.REACT_APP_GROQ_API_KEY}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      setResponse(result.data.choices[0].message.content);
-    } catch (error) {
-      console.error('Error calling Groq API:', error.response ? error.response.data : error.message);
-      if (error.response) {
-        setResponse(`Error: ${error.response.data.error || 'An error occurred while processing your request.'}`);
-      } else if (error.request) {
-        setResponse('Error: No response from Groq API.');
-      } else {
-        setResponse('Error: Failed to set up the request.');
+  useEffect(() => {
+    const generateIdea = async () => {
+      if (activeNodes.length === 0) {
+        setResponse('');
+        return;
       }
-    }
 
-    setIsLoading(false);
-  };
+      setIsLoading(true);
+
+      const nodesSummary = activeNodes.map(node => 
+        `${node.name}: ${node.description}`
+      ).join('\n');
+
+      const prompt = `I have the following APIs available:\n${nodesSummary}\n\nSuggest an innovative application or tool that combines these APIs in a useful way. Focus on practical features and user benefits.`;
+
+      try {
+        const result = await axios.post(
+          'https://api.groq.com/openai/v1/chat/completions',
+          {
+            model: 'llama-3.1-70b-versatile',
+            messages: [
+              { role: 'system', content: systemPromptFeedback },
+              { role: 'user', content: prompt }
+            ],
+            max_tokens: 500,
+            temperature: 0.7,
+          },
+          {
+            headers: {
+              'Authorization': `Bearer ${process.env.REACT_APP_GROQ_API_KEY}`,
+              'Content-Type': 'application/json',
+            },
+          }
+        );
+
+        setResponse(result.data.choices[0].message.content);
+      } catch (error) {
+        console.error('Error calling Groq API:', error);
+        setResponse('Error generating idea. Please try again later.');
+      }
+
+      setIsLoading(false);
+    };
+
+    generateIdea();
+  }, [activeNodes]);
 
   return (
     <div className="ai-interface">
-      <h3>API Assistant</h3>
-      <form onSubmit={handleSubmit}>
-        <textarea
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Ask me anything about APIs or web development..."
-        />
-        <button type="submit" disabled={isLoading}>
-          {isLoading ? 'Processing...' : 'Submit'}
-        </button>
-      </form>
-      {response && (
-        <div className="ai-response">
-          <h4>Response:</h4>
-          <p>{response}</p>
-        </div>
-      )}
+      <h3>API Combination Ideas</h3>
+      <div className="ai-response">
+        {isLoading ? (
+          <p>Generating ideas...</p>
+        ) : (
+          <div>
+            {activeNodes.length === 0 ? (
+              <p>Drop some API nodes to get application ideas!</p>
+            ) : (
+              <p>{response}</p>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

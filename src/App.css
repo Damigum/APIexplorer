@@ -4,7 +4,7 @@
 @import url("https://fonts.googleapis.com/css2?family=Karla:ital,wght@0,200..800;1,200..800&family=Lora:ital,wght@0,400..700;1,400..700&family=Manrope:wght@200..800&family=Outfit:wght@100..900&family=Rubik:ital,wght@0,300..900;1,300..900&display=swap");
 
 body {
-  background-color: #edf2f4;
+  background-color: #eaf0f5;
   margin: 0;
   padding: 0;
   overflow-y: auto;
@@ -13,19 +13,35 @@ body {
 .App {
   max-width: 100%;
   padding: 20px;
-  padding-top: 100px;
+  padding-top: 140px;
+  padding-bottom: 10px;
   font-family: 'Karla', sans-serif;
+  position: relative;
 }
 
-/* New sticky header container */
+/* Header container with tabs */
 .header-container {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  background-color: #edf2f4;
+  background-color: #eaf0f5;
   padding: 25px;
   z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.header-container::after {
+  content: '';
+  position: absolute;
+  bottom: -40px;
+  left: 0;
+  right: 0;
+  height: 40px;
+  background: linear-gradient(to bottom, #eaf0f5, transparent);
+  pointer-events: none;
 }
 
 h1 {
@@ -36,25 +52,69 @@ h1 {
   font-size: 2.5em;
 }
 
+/* Tab styles */
+.tab-container {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  padding: 0 20px;
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: white;
+  border: 1px solid #e5e7eb;
+  color: #666;
+  font-weight: 500;
+}
+
+.tab:hover {
+  background: #f8f9fa;
+}
+
+.tab.active {
+  background: #f8f9fa;
+  border-color: #d1d5db;
+  color: #333;
+}
+
+.tab svg {
+  width: 20px;
+  height: 20px;
+}
+
 .main-container {
   display: flex;
   transition: all 0.3s ease;
   position: relative;
+  padding-top: 20px;
+  min-height: calc(100vh - 220px);
+  --node-window-width: 0;
+}
+
+.main-container.expanded {
+  --node-window-width: 50%;
 }
 
 .api-list-container {
   width: 100%;
   transition: width 0.3s ease;
+  padding-bottom: 60px;
 }
 
-/* Node window styles */
 .node-window {
   width: 25%;
-  height: calc(100vh - 140px);
+  height: calc(100vh - 180px);
   transition: all 0.3s ease;
   position: fixed;
   right: 0;
-  top: 5;
+  top: 140px;
   background-color: #f5f5f5;
   opacity: 0;
   overflow: hidden;
@@ -78,82 +138,13 @@ h1 {
   width: 50%;
 }
 
-.ai-interface-wrapper {
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: 100%;
-  z-index: 100;
-  display: flex;
-  flex-direction: column;
-  pointer-events: none;
-}
-
-.ai-interface-toggle {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 11;
-  pointer-events: auto;
-}
-
-.ai-interface {
-  position: absolute;
-  bottom: 20px;
-  right: 20px;
-  width: 300px;
-  background-color: white;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  padding: 10px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  z-index: 11;
-  pointer-events: auto;
-}
-
-.ai-interface h3 {
-  margin-top: 0;
-  margin-bottom: 10px;
-}
-
-.ai-interface textarea {
-  width: 100%;
-  height: 100px;
-  margin-bottom: 10px;
-  padding: 5px;
-  resize: vertical;
-  border: 1px solid #ccc;
-  border-radius: 3px;
-}
-
-.ai-interface button {
-  display: block;
-  width: 100%;
-  padding: 8px;
-  background-color: #2d302d;
-  color: white;
-  border: none;
-  border-radius: 3px;
-  cursor: pointer;
-}
-
-.ai-interface button:hover {
-  background-color: #45a049;
-}
-
-.ai-interface button:disabled {
-  background-color: #cccccc;
-  cursor: not-allowed;
-}
-
 .api-list {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 30px;
   justify-content: center;
   max-width: 900px;
-  margin: 0 auto;
+  margin: 20px auto 0;
 }
 
 .api-card {
@@ -246,6 +237,29 @@ h1 {
   background-color: var(--category-color);
 }
 
+/* Pagination styles */
+nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: #eaf0f5;
+  padding: 20px;
+  z-index: 1000;
+}
+
+nav::before {
+  content: '';
+  position: absolute;
+  top: -40px;
+  left: 0;
+  right: var(--node-window-width, 0);
+  height: 40px;
+  background: linear-gradient(to bottom, transparent, #eaf0f5);
+  pointer-events: none;
+  transition: right 0.3s ease;
+}
+
 .pagination {
   display: flex;
   justify-content: center;
@@ -253,7 +267,7 @@ h1 {
   flex-wrap: wrap;
   list-style-type: none;
   padding: 0;
-  margin-top: 20px;
+  margin: 0;
   max-width: 900px;
   margin-left: auto;
   margin-right: auto;
@@ -312,6 +326,46 @@ h1 {
   -webkit-box-orient: vertical;
 }
 
+/* AI Interface styles */
+.ai-interface-wrapper {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  pointer-events: none;
+}
+
+.ai-interface {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  width: 300px;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  z-index: 11;
+  pointer-events: auto;
+}
+
+.ai-interface h3 {
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+.ai-response {
+  margin-top: 15px;
+  border-top: 1px solid #eee;
+  padding-top: 10px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
 .overlay {
   position: absolute;
   top: 0;
@@ -333,35 +387,18 @@ h1 {
   }
 }
 
-.react-flow {
-  width: 100%;
-  height: 100%;
-}
-
-.react-flow__renderer {
-  width: 100%;
-  height: 100%;
-}
-
-.react-flow__background {
-  background-color: #f3f8fa;
-}
-
-.ai-response {
-  margin-top: 15px;
-  border-top: 1px solid #eee;
-  padding-top: 10px;
-  max-height: 200px;
-  overflow-y: auto;
-}
-
-.ai-response h4 {
-  margin-top: 0;
-  margin-bottom: 5px;
-}
-
-/* Responsive Design */
+/* Media Queries */
 @media screen and (max-width: 1024px) {
+  .tab-container {
+    overflow-x: auto;
+    padding: 0 10px;
+  }
+  
+  .tab {
+    padding: 6px 12px;
+    font-size: 0.9em;
+  }
+  
   .node-window {
     height: calc(100vh - 120px);
     width: 35%;
@@ -369,6 +406,10 @@ h1 {
   
   .node-window.expanded {
     width: 60%;
+  }
+  
+  .main-container.expanded {
+    --node-window-width: 60%;
   }
   
   .main-container.expanded .api-list-container {
@@ -385,6 +426,23 @@ h1 {
 }
 
 @media screen and (max-width: 768px) {
+  .App {
+    padding-bottom: 100px;
+  }
+
+  .header-container {
+    padding: 15px;
+  }
+  
+  .tab-container {
+    gap: 8px;
+  }
+  
+  .tab {
+    padding: 4px 8px;
+    font-size: 0.8em;
+  }
+  
   .node-window {
     height: calc(100vh - 100px);
     width: 100%;
@@ -407,6 +465,10 @@ h1 {
     width: 100%;
   }
   
+  .main-container.expanded {
+    --node-window-width: 0;
+  }
+  
   .main-container.expanded .api-list-container {
     width: 100%;
     margin-bottom: 50vh;
@@ -425,11 +487,20 @@ h1 {
     max-width: 300px;
     margin: 0 auto;
   }
-
+  
   .ai-interface {
     width: calc(100% - 40px);
     right: 10px;
     left: 10px;
+  }
+
+  nav {
+    padding: 15px;
+  }
+
+  .pagination button {
+    padding: 2px 6px;
+    font-size: 0.7em;
   }
 }
 
@@ -443,6 +514,17 @@ h1 {
   }
 }
 
+@media screen and (max-width: 480px) {
+  .App {
+    padding-bottom: 120px;
+  }
+
+  .pagination {
+    max-width: 100%;
+    padding: 0 10px;
+  }
+}
+
 @media screen and (max-width: 896px) and (orientation: landscape) {
   .node-window {
     height: calc(100vh - 60px);
@@ -453,6 +535,10 @@ h1 {
   
   .node-window.expanded {
     width: 60%;
+  }
+  
+  .main-container.expanded {
+    --node-window-width: 60%;
   }
   
   .main-container.expanded .api-list-container {

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { ReactFlowProvider } from 'react-flow-renderer';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
+import { Database, Cpu, BookOpen, Blocks } from 'lucide-react';
 import ApiList from './components/ApiList';
 import Pagination from './components/Pagination';
 import NodeWindow from './components/NodeWindow';
@@ -20,6 +21,7 @@ const shuffleArray = (array) => {
 };
 
 function App() {
+  const [activeTab, setActiveTab] = useState('apis');
   const [currentPage, setCurrentPage] = useState(1);
   const [apisPerPage] = useState(30);
   const [randomizedApis, setRandomizedApis] = useState([]);
@@ -102,11 +104,41 @@ function App() {
 
   return (
     <DndProvider backend={HTML5Backend}>
-    <div className="App">
-      <div className="header-container">
-        <h1>API Explorer</h1>
-      </div>
-      <div className={`main-container ${isNodeWindowExpanded ? 'expanded' : ''}`}>
+      <div className="App">
+        <div className="header-container">
+          <h1>API Explorer</h1>
+          <div className="tab-container">
+            <button
+              onClick={() => setActiveTab('apis')}
+              className={`tab ${activeTab === 'apis' ? 'active' : ''}`}
+            >
+              <Database size={20} />
+              <span>APIs</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('aiModels')}
+              className={`tab ${activeTab === 'aiModels' ? 'active' : ''}`}
+            >
+              <Cpu size={20} />
+              <span>AI Models</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('libraries')}
+              className={`tab ${activeTab === 'libraries' ? 'active' : ''}`}
+            >
+              <BookOpen size={20} />
+              <span>Libraries</span>
+            </button>
+            <button
+              onClick={() => setActiveTab('buildingBlocks')}
+              className={`tab ${activeTab === 'buildingBlocks' ? 'active' : ''}`}
+            >
+              <Blocks size={20} />
+              <span>Building Blocks</span>
+            </button>
+          </div>
+        </div>
+        <div className={`main-container ${isNodeWindowExpanded ? 'expanded' : ''}`}>
           <div className="api-list-container">
             <ApiList 
               apis={currentApis} 
