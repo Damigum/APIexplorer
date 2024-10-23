@@ -1,4 +1,5 @@
-import React, { useRef, useEffect, useState } from 'react';
+// NodeWindow.js
+import React, { useRef, useEffect } from 'react';
 import ReactFlow, {
   Background,
   Controls,
@@ -31,7 +32,18 @@ const NodeWindow = ({
   isDraggingApiCard
 }) => {
   const nodeWindowRef = useRef(null);
-  const [showAiInterface, setShowAiInterface] = useState(false);
+  const [activeNodes, setActiveNodes] = React.useState([]);
+
+  useEffect(() => {
+    // Update activeNodes whenever nodes change
+    const nodeData = nodes.map(node => ({
+      name: node.data.api.Name,
+      description: node.data.api.Description,
+      category: node.data.api.Category,
+      url: node.data.api.URL
+    }));
+    setActiveNodes(nodeData);
+  }, [nodes]);
 
   useEffect(() => {
     if (nodes.length > 0 && !isExpanded) {
@@ -146,7 +158,7 @@ const NodeWindow = ({
           </button>
         </div>
       )}
-      <div className="node-window-content" style={{ width: '100%', height: '100%' }}>
+      <div className="node-window-content" style={{ width: '100%', height: '100%', position: 'relative' }}>
         <ReactFlow
           nodes={decoratedNodes}
           edges={edges}
@@ -161,14 +173,9 @@ const NodeWindow = ({
           <Background />
           <Controls />
         </ReactFlow>
-        {isExpanded && (
+        {isExpanded && nodes.length > 0 && (
           <div className="ai-interface-wrapper">
-            <div className="ai-interface-toggle">
-              <button onClick={() => setShowAiInterface(!showAiInterface)}>
-                {showAiInterface ? 'Hide AI Interface' : 'Show AI Interface'}
-              </button>
-            </div>
-            {showAiInterface && <AiInterface />}
+            <AiInterface activeNodes={activeNodes} />
           </div>
         )}
       </div>
@@ -177,9 +184,6 @@ const NodeWindow = ({
 };
 
 export default NodeWindow;
-
-
-
 
 
 
