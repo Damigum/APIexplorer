@@ -110,17 +110,17 @@ h1 {
 
 .node-window {
   width: 25%;
-  height: calc(100vh - 240px); /* Adjusted height to make room for input form */
+  height: calc(100vh - 200px); /* Adjusted height to make room for input form */
   transition: all 0.3s ease;
   position: fixed;
   right: 0;
-  top: 140px;
+  top: 130px;
   background-color: #f5f5f5;
   opacity: 0;
   overflow: hidden;
   pointer-events: none;
   border-radius: 8px;
-  margin-right: 20px;
+  margin-right: 8px;
 }
 
 .node-window.show {
@@ -602,16 +602,16 @@ nav::before {
 
 .user-idea-input {
   position: fixed;
-  bottom: 20px;
-  right: 20px;
+  bottom: 10px;
+  right: 50px;
   z-index: 1000;
   width: 400px;
   display: flex;
   justify-content: center;
   background-color: #eaf0f5;
-  padding: 16px;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  padding: 1px;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.0);
   transition: all 0.3s ease;
 }
 
@@ -630,7 +630,7 @@ nav::before {
   flex-grow: 1;
   padding: 8px 12px;
   border: 1px solid #000000;
-  border-radius: 12px;
+  border-radius: 15px;
   font-family: 'Nunito', sans-serif;
   font-size: 0.9em;
   background-color: white;
@@ -671,7 +671,7 @@ nav::before {
 
 /* When node window is expanded */
 .main-container.expanded .user-idea-input {
-  right: calc(50% + 20px);
+  left: calc(50% + 20px);
 }
 
 @media screen and (max-width: 1024px) {
@@ -694,7 +694,9 @@ nav::before {
   width: 100%;
   transition: width 0.3s ease;
   background-color: #eaf0f5;
-  padding: 20px;
+  padding: 8px;
+  padding-bottom: 12px;
+  padding-top: 26px;
   z-index: 1000;
 }
 
