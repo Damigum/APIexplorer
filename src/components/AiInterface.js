@@ -1,10 +1,28 @@
+// AiInterface.js
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { Send } from 'lucide-react';
+import axios from 'axios';
 
-const systemPromptFeedback = `You are an AI assistant specialized in generating creative ideas for applications and tools that combine multiple APIs. When presented with a set of APIs, suggest innovative ways to combine them into useful applications or tools. Focus on practical, realizable ideas that leverage the unique features of each API. Keep suggestions concise but specific, highlighting the key features and potential user benefits. If the combination of APIs changes, adapt your suggestions accordingly.`;
+const AiInterface = ({ activeNodes, onAddNode, apis, setIsNodeWindowExpanded, isCollapsed }) => {
+  const [response, setResponse] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [userIdea, setUserIdea] = useState('');
 
-const systemPromptSearch = `You are an AI assistant specialized in suggesting relevant APIs for user project ideas. When a user describes their project idea, analyze it and suggest specific APIs that would be helpful in implementing that idea. Consider both obvious and creative API combinations that could enhance the project. Return your response in a specific format:
+  const generateIdea = async (fromUserIdea = false) => {
+    if ((!fromUserIdea && activeNodes.length === 0) || (fromUserIdea && !userIdea)) {
+      return;
+    }
+
+    setIsLoading(true);
+    setIsNodeWindowExpanded(true);
+
+    let prompt;
+    let systemPrompt;
+
+    if (fromUserIdea) {
+      const apiList = apis.map(api => `${api.Name}: ${api.Description}`).join('\n');
+      prompt = `Given this list of available APIs:\n${apiList}\n\nThe user wants to build: ${userIdea}\n\nWhat APIs would be most useful for this project?`;
+      systemPrompt = `You are an AI assistant specialized in suggesting relevant APIs for user project ideas. When a user describes their project idea, analyze it and suggest specific APIs that would be helpful in implementing that idea. Consider both obvious and creative API combinations that could enhance the project. Return your response in a specific format:
 
 Selected APIs:
 - API Name 1: Brief explanation of how it helps
@@ -14,34 +32,12 @@ Selected APIs:
 Additional Thoughts: A brief explanation of how these APIs would work together.
 
 Only suggest APIs that are in the provided list.`;
-
-const AiInterface = ({ activeNodes, onAddNode, apis }) => {
-  const [response, setResponse] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [userIdea, setUserIdea] = useState('');
-  const [searchMode, setSearchMode] = useState(false);
-
-  const generateIdea = async (fromUserIdea = false) => {
-    if ((!fromUserIdea && activeNodes.length === 0) || (fromUserIdea && !userIdea)) {
-      return;
-    }
-
-    setIsLoading(true);
-
-    let prompt;
-    let systemPrompt;
-
-    if (fromUserIdea) {
-      // Create a simplified API list for the AI
-      const apiList = apis.map(api => `${api.Name}: ${api.Description}`).join('\n');
-      prompt = `Given this list of available APIs:\n${apiList}\n\nThe user wants to build: ${userIdea}\n\nWhat APIs would be most useful for this project?`;
-      systemPrompt = systemPromptSearch;
     } else {
       const nodesSummary = activeNodes.map(node => 
         `${node.name}: ${node.description}`
       ).join('\n');
       prompt = `I have the following APIs available:\n${nodesSummary}\n\nSuggest an innovative application or tool that combines these APIs in a useful way. Focus on practical features and user benefits.`;
-      systemPrompt = systemPromptFeedback;
+      systemPrompt = `You are an AI assistant specialized in generating creative ideas for applications and tools that combine multiple APIs. When presented with a set of APIs, suggest innovative ways to combine them into useful applications or tools. Focus on practical, realizable ideas that leverage the unique features of each API. Keep suggestions concise but specific, highlighting the key features and potential user benefits.`;
     }
 
     try {
@@ -67,11 +63,10 @@ const AiInterface = ({ activeNodes, onAddNode, apis }) => {
       const aiResponse = result.data.choices[0].message.content;
       setResponse(aiResponse);
 
-      // If this was a user idea search, try to add suggested APIs as nodes
       if (fromUserIdea) {
         const apiNames = aiResponse.match(/- (.*?):/g) || [];
         apiNames.forEach(nameMatch => {
-          const apiName = nameMatch.slice(2, -1).trim(); // Remove "- " and ":"
+          const apiName = nameMatch.slice(2, -1).trim();
           const api = apis.find(a => a.Name === apiName);
           if (api) {
             onAddNode(api);
@@ -87,36 +82,58 @@ const AiInterface = ({ activeNodes, onAddNode, apis }) => {
   };
 
   useEffect(() => {
-    if (!searchMode) {
+    if (!isCollapsed && activeNodes.length > 0) {
       generateIdea(false);
     }
-  }, [activeNodes]);
+  }, [activeNodes, isCollapsed]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (userIdea.trim()) {
-      setSearchMode(true);
       generateIdea(true);
+      setUserIdea('');
     }
   };
 
+  // Only render the input form if collapsed, or the full interface if expanded
+  if (isCollapsed) {
+    return (
+      <div className="user-idea-input">
+        <form onSubmit={handleSubmit}>
+          <input
+            type="text"
+            value={userIdea}
+            onChange={(e) => setUserIdea(e.target.value)}
+            placeholder="Describe your project idea..."
+            aria-label="Project idea input"
+          />
+          <button 
+            type="submit"
+            aria-label="Send"
+            className="send-button"
+          >
+            <Send size={18} />
+          </button>
+        </form>
+      </div>
+    );
+  }
+
   return (
-    <>
-      <div className="ai-interface">
-        <h3>API Combination Ideas</h3>
-        <div className="ai-response">
-          {isLoading ? (
-            <p>Generating ideas...</p>
-          ) : (
-            <div>
-              {activeNodes.length === 0 && !searchMode ? (
-                <p>Drop some API nodes to get application ideas!</p>
-              ) : (
-                <p>{response}</p>
-              )}
-            </div>
-          )}
-        </div>
+    <div className="ai-interface">
+      <h3>API Combination Ideas</h3>
+      <div className="ai-response">
+        {isLoading ? (
+          <p>Generating ideas...</p>
+        ) : (
+          <div>
+            {activeNodes.length === 0 && !response ? (
+              <p>Drop some API nodes or describe your project idea to get started!</p>
+            ) : (
+              <p>{response}</p>
+            )}
+          </div>
+        )}
       </div>
       <div className="user-idea-input">
         <form onSubmit={handleSubmit}>
@@ -127,10 +144,16 @@ const AiInterface = ({ activeNodes, onAddNode, apis }) => {
             placeholder="Describe your project idea..."
             aria-label="Project idea input"
           />
-          <button type="submit">Suggest APIs</button>
+          <button 
+            type="submit"
+            aria-label="Send"
+            className="send-button"
+          >
+            <Send size={18} />
+          </button>
         </form>
       </div>
-    </>
+    </div>
   );
 };
 

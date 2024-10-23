@@ -1,4 +1,4 @@
-//NodeWindow.js
+// NodeWindow.js
 import React, { useRef, useEffect } from 'react';
 import ReactFlow, {
   Background,
@@ -12,33 +12,6 @@ import ApiNode from './ApiNode';
 import { useDrop } from 'react-dnd';
 import AiInterface from './AiInterface';
 import { v4 as uuidv4 } from 'uuid';
-
-const UserIdeaInput = ({ onSubmit }) => {
-  const [userIdea, setUserIdea] = React.useState('');
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (userIdea.trim()) {
-      onSubmit(userIdea);
-      setUserIdea('');
-    }
-  };
-
-  return (
-    <div className="user-idea-input">
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          value={userIdea}
-          onChange={(e) => setUserIdea(e.target.value)}
-          placeholder="Describe your project idea..."
-          aria-label="Project idea input"
-        />
-        <button type="submit">Suggest APIs</button>
-      </form>
-    </div>
-  );
-};
 
 const nodeTypes = {
   apiNode: ApiNode,
@@ -57,7 +30,6 @@ const NodeWindow = ({
 }) => {
   const nodeWindowRef = useRef(null);
   const [activeNodes, setActiveNodes] = React.useState([]);
-  const [aiMode, setAiMode] = React.useState('node-to-idea');
 
   useEffect(() => {
     const nodeData = nodes.map(node => ({
@@ -68,15 +40,6 @@ const NodeWindow = ({
     }));
     setActiveNodes(nodeData);
   }, [nodes]);
-
-  useEffect(() => {
-    if (nodes.length > 0 && !isExpanded) {
-      setIsNodeWindowExpanded(true);
-    }
-    if (nodes.length === 0 && isExpanded) {
-      setIsNodeWindowExpanded(false);
-    }
-  }, [nodes.length, isExpanded, setIsNodeWindowExpanded]);
 
   const [, drop] = useDrop({
     accept: 'API_CARD',
@@ -100,7 +63,6 @@ const NodeWindow = ({
       };
 
       onApiDrop(api, adjustedPosition);
-      setAiMode('node-to-idea');
     }
   });
 
@@ -144,13 +106,6 @@ const NodeWindow = ({
     };
 
     setNodes((nds) => [...nds, newNode]);
-  };
-
-  const handleIdeaSubmit = (idea) => {
-    setAiMode('idea-to-node');
-    // Clear existing nodes when starting a new idea
-    setNodes([]);
-    setEdges([]);
   };
 
   const decoratedNodes = nodes.map(node => ({
@@ -227,19 +182,24 @@ const NodeWindow = ({
                 activeNodes={activeNodes} 
                 onAddNode={addNode}
                 apis={apis}
-                mode={aiMode}
+                setIsNodeWindowExpanded={setIsNodeWindowExpanded}
               />
             </div>
           )}
         </div>
       </div>
-      <UserIdeaInput onSubmit={handleIdeaSubmit} />
+      <AiInterface 
+        activeNodes={activeNodes} 
+        onAddNode={addNode}
+        apis={apis}
+        setIsNodeWindowExpanded={setIsNodeWindowExpanded}
+        isCollapsed={!isExpanded}
+      />
     </>
   );
 };
 
 export default NodeWindow;
-
 
 
 

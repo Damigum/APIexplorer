@@ -646,21 +646,28 @@ nav::before {
 }
 
 .user-idea-input button {
-  font-family: 'Nunito', sans-serif;
-  padding: 8px 16px;
+  display: flex; /* Ensure the button is a flex container */
+  align-items: center; /* Center the icon vertically */
+  justify-content: center; /* Center the icon horizontally */
+  padding: 8px; /* Adjust padding as needed */
+  min-width: 36px; /* Minimum width for the button */
+  height: 36px; /* Height for the button */
   border: 1px solid #000000;
   background-color: white;
   color: #2e0baf;
   cursor: pointer;
-  border-radius: 12px;
+  border-radius: 50%; /* Make it circular */
   transition: all 0.3s ease;
-  font-size: 0.9em;
-  white-space: nowrap;
 }
 
-.user-idea-input button:hover {
+.user-idea-input button.send-button {
+  /* Additional styles for the send button */
+}
+
+.user-idea-input button.send-button:hover {
   background-color: #ffd900;
   color: rgb(0, 0, 0);
+  transform: translateY(-1px);
 }
 
 /* Media queries for responsive design */
@@ -748,3 +755,33 @@ nav::before {
     right: 16px;
   }
 }
+
+/* Update these styles in your App.css */
+
+.user-idea-input {
+  /* ... existing styles ... */
+}
+
+.user-idea-input button.send-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  min-width: 36px;
+  height: 36px;
+  border: 1px solid #000000;
+  background-color: white;
+  color: #2e0baf;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.user-idea-input button.send-button:hover {
+  background-color: #ffd900;
+  color: rgb(0, 0, 0);
+  transform: translateY(-1px);
+}
+
+/* ... existing styles ... */
+
