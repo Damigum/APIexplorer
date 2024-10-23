@@ -8,7 +8,7 @@ const Pagination = ({ apisPerPage, totalApis, paginate, currentPage }) => {
   }
 
   return (
-    <nav>
+    <div className="pagination-container">
       <ul className="pagination">
         {pageNumbers.map(number => (
           <li key={number} className={number === currentPage ? 'active' : ''}>
@@ -18,7 +18,7 @@ const Pagination = ({ apisPerPage, totalApis, paginate, currentPage }) => {
           </li>
         ))}
       </ul>
-    </nav>
+    </div>
   );
 };
 

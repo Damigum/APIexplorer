@@ -110,7 +110,7 @@ h1 {
 
 .node-window {
   width: 25%;
-  height: calc(100vh - 180px);
+  height: calc(100vh - 240px); /* Adjusted height to make room for input form */
   transition: all 0.3s ease;
   position: fixed;
   right: 0;
@@ -119,6 +119,8 @@ h1 {
   opacity: 0;
   overflow: hidden;
   pointer-events: none;
+  border-radius: 8px;
+  margin-right: 20px;
 }
 
 .node-window.show {
@@ -128,7 +130,7 @@ h1 {
 }
 
 .node-window.expanded {
-  width: 50%;
+  width: calc(50% - 20px); /* Account for margin */
   opacity: 1;
   pointer-events: all;
 }
@@ -138,7 +140,7 @@ h1 {
 }
 
 .main-container.expanded .node-window {
-  width: 50%;
+  width: calc(50% - 20px); /* Account for margin */
 }
 
 .api-list {
@@ -610,6 +612,12 @@ nav::before {
   padding: 16px;
   border-radius: 8px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.main-container.expanded .user-idea-input {
+  width: calc(50% - 40px);
+  right: 20px;
 }
 
 .user-idea-input form {
@@ -678,7 +686,61 @@ nav::before {
   }
 }
 
+/* Pagination Container styles */
+.pagination-container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  transition: width 0.3s ease;
+  background-color: #eaf0f5;
+  padding: 20px;
+  z-index: 1000;
+}
 
+.main-container.expanded .pagination-container {
+  width: 50%;
+}
 
+.pagination-container::before {
+  content: '';
+  position: absolute;
+  top: -40px;
+  left: 0;
+  right: 0;
+  height: 40px;
+  background: linear-gradient(to bottom, transparent, #eaf0f5);
+  pointer-events: none;
+}
 
+/* Media queries */
+@media screen and (max-width: 1024px) {
+  .node-window {
+    height: calc(100vh - 220px);
+  }
+  
+  .user-idea-input {
+    width: 350px;
+  }
+  
+  .main-container.expanded .user-idea-input {
+    width: calc(60% - 40px);
+  }
+}
 
+@media screen and (max-width: 768px) {
+  .node-window {
+    height: calc(100vh - 180px);
+    margin-right: 0;
+  }
+  
+  .user-idea-input {
+    width: calc(100% - 32px);
+    bottom: 80px;
+  }
+  
+  .main-container.expanded .user-idea-input {
+    width: calc(100% - 32px);
+    right: 16px;
+  }
+}
