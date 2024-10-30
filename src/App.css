@@ -110,19 +110,18 @@ h1 {
 
 .node-window {
   width: 25%;
-  height: calc(100vh - 200px); /* Adjusted height to make room for input form */
+  height: calc(100vh - 200px);
   transition: all 0.3s ease;
   position: fixed;
   right: 0;
-  top: 130px;
-  background-color: #f5f5f5;
+  top: 145px;
   opacity: 0;
   overflow: hidden;
   pointer-events: none;
   border-radius: 8px;
   margin-right: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
-
 
 .node-window.show {
   opacity: 1;
@@ -131,7 +130,7 @@ h1 {
 }
 
 .node-window.expanded {
-  width: calc(50% - 20px); /* Account for margin */
+  width: calc(50% - 20px);
   opacity: 1;
   pointer-events: all;
   z-index: 1001;
@@ -142,7 +141,7 @@ h1 {
 }
 
 .main-container.expanded .node-window {
-  width: calc(50% - 0px); /* Account for margin */
+  width: calc(50% - 20px);
 }
 
 .api-list {
@@ -348,7 +347,7 @@ nav::before {
 
 .ai-interface {
   position: absolute;
-  bottom: 20px;
+  bottom: 10px;
   right: 8px;
   width: 95%;
   background-color: white;
@@ -426,8 +425,128 @@ nav::before {
   color: #333;
 }
 
+/* User idea input styles */
+.user-idea-input {
+  position: fixed;
+  bottom: 10px;
+  right: 50px;
+  z-index: 1000;
+  width: 400px;
+  display: flex;
+  justify-content: center;
+  background-color: #eaf0f5;
+  padding: 1px;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.0);
+  transition: all 0.3s ease;
+}
+
+.main-container.expanded .user-idea-input {
+  width: calc(50% - 40px);
+  right: 20px;
+}
+
+.user-idea-input form {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+}
+
+.user-idea-input input {
+  flex-grow: 1;
+  padding: 8px 12px;
+  border: 1px solid #000000;
+  border-radius: 15px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.9em;
+  background-color: white;
+  color: #333;
+}
+
+.user-idea-input input:focus {
+  outline: none;
+  border-color: #0066cc;
+  box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.1);
+}
+
+.user-idea-input button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  min-width: 36px;
+  height: 36px;
+  border: 1px solid #000000;
+  background-color: white;
+  color: #2e0baf;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.user-idea-input button.send-button:hover {
+  background-color: #ffd900;
+  color: rgb(0, 0, 0);
+  transform: translateY(-1px);
+}
+
+/* React Flow specific styles */
+.react-flow {
+  background-color: transparent;
+}
+
+.react-flow__controls {
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  background-color: white;
+  border-radius: 6px;
+}
+
+.react-flow__controls button {
+  background-color: white;
+  border: none;
+  border-bottom: 1px solid #eee;
+  box-shadow: none;
+}
+
+.react-flow__controls button:hover {
+  background-color: #f8f9fa;
+}
+
+/* Pagination Container styles */
+.pagination-container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  transition: width 0.3s ease;
+  background-color: #eaf0f5;
+  padding: 0px;
+  padding-bottom: 12px;
+  padding-top: 20px;
+  z-index: 1000;
+}
+
+.main-container.expanded .pagination-container {
+  width: 50%;
+}
+
+.pagination-container::before {
+  content: '';
+  position: absolute;
+  top: -40px;
+  left: 0;
+  right: 0;
+  height: 40px;
+  background: linear-gradient(to bottom, transparent, #eaf0f5);
+  pointer-events: none;
+}
+
 /* Media queries */
 @media screen and (max-width: 1024px) {
+  .node-window {
+    height: calc(100vh - 220px);
+  }
+  
   .tab-container {
     overflow-x: auto;
     padding: 0 10px;
@@ -439,7 +558,6 @@ nav::before {
   }
   
   .node-window {
-    height: calc(100vh - 120px);
     width: 35%;
   }
   
@@ -462,7 +580,15 @@ nav::before {
   .api-list {
     grid-template-columns: repeat(2, 1fr);
   }
-
+  
+  .user-idea-input {
+    width: 350px;
+  }
+  
+  .main-container.expanded .user-idea-input {
+    width: calc(60% - 40px);
+  }
+  
   .ai-interface {
     width: 350px;
   }
@@ -529,6 +655,16 @@ nav::before {
     width: 100%;
     max-width: 300px;
     margin: 0 auto;
+  }
+  
+  .user-idea-input {
+    width: calc(100% - 32px);
+    bottom: 80px;
+  }
+  
+  .main-container.expanded .user-idea-input {
+    width: calc(100% - 32px);
+    right: 16px;
   }
   
   .ai-interface {
@@ -599,189 +735,3 @@ nav::before {
     background-position: -100% 0;
   }
 }
-
-/* Update these styles in your App.css */
-
-.user-idea-input {
-  position: fixed;
-  bottom: 10px;
-  right: 50px;
-  z-index: 1000;
-  width: 400px;
-  display: flex;
-  justify-content: center;
-  background-color: #eaf0f5;
-  padding: 1px;
-  border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.0);
-  transition: all 0.3s ease;
-}
-
-.main-container.expanded .user-idea-input {
-  width: calc(50% - 40px);
-  right: 20px;
-}
-
-.user-idea-input form {
-  display: flex;
-  gap: 8px;
-  width: 100%;
-}
-
-.user-idea-input input {
-  flex-grow: 1;
-  padding: 8px 12px;
-  border: 1px solid #000000;
-  border-radius: 15px;
-  font-family: 'Nunito', sans-serif;
-  font-size: 0.9em;
-  background-color: white;
-  color: #333;
-}
-
-.user-idea-input input:focus {
-  outline: none;
-  border-color: #0066cc;
-  box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.1);
-}
-
-.user-idea-input button {
-  display: flex; /* Ensure the button is a flex container */
-  align-items: center; /* Center the icon vertically */
-  justify-content: center; /* Center the icon horizontally */
-  padding: 8px; /* Adjust padding as needed */
-  min-width: 36px; /* Minimum width for the button */
-  height: 36px; /* Height for the button */
-  border: 1px solid #000000;
-  background-color: white;
-  color: #2e0baf;
-  cursor: pointer;
-  border-radius: 50%; /* Make it circular */
-  transition: all 0.3s ease;
-}
-
-.user-idea-input button.send-button {
-  /* Additional styles for the send button */
-}
-
-.user-idea-input button.send-button:hover {
-  background-color: #ffd900;
-  color: rgb(0, 0, 0);
-  transform: translateY(-1px);
-}
-
-/* Media queries for responsive design */
-@media screen and (max-width: 768px) {
-  .user-idea-input {
-    width: calc(100% - 32px);
-    bottom: 80px;
-  }
-}
-
-/* When node window is expanded */
-.main-container.expanded .user-idea-input {
-  left: calc(50% + 0px);
-}
-
-@media screen and (max-width: 1024px) {
-  .main-container.expanded .user-idea-input {
-    right: calc(60% + 20px);
-  }
-}
-
-@media screen and (max-width: 768px) {
-  .main-container.expanded .user-idea-input {
-    right: 20px;
-  }
-}
-
-/* Pagination Container styles */
-.pagination-container {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  transition: width 0.3s ease;
-  background-color: #eaf0f5;
-  padding: 0px;
-  padding-bottom: 12px;
-  padding-top: 20px;
-  z-index: 1000;
-}
-
-.main-container.expanded .pagination-container {
-  width: 50%;
-}
-
-.pagination-container::before {
-  content: '';
-  position: absolute;
-  top: -40px;
-  left: 0;
-  right: 0;
-  height: 40px;
-  background: linear-gradient(to bottom, transparent, #eaf0f5);
-  pointer-events: none;
-}
-
-/* Media queries */
-@media screen and (max-width: 1024px) {
-  .node-window {
-    height: calc(100vh - 220px);
-  }
-  
-  .user-idea-input {
-    width: 350px;
-  }
-  
-  .main-container.expanded .user-idea-input {
-    width: calc(60% - 40px);
-  }
-}
-
-@media screen and (max-width: 768px) {
-  .node-window {
-    height: calc(100vh - 180px);
-    margin-right: 0;
-  }
-  
-  .user-idea-input {
-    width: calc(100% - 32px);
-    bottom: 80px;
-  }
-  
-  .main-container.expanded .user-idea-input {
-    width: calc(100% - 32px);
-    right: 16px;
-  }
-}
-
-/* Update these styles in your App.css */
-
-.user-idea-input {
-  /* ... existing styles ... */
-}
-
-.user-idea-input button.send-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px;
-  min-width: 36px;
-  height: 36px;
-  border: 1px solid #000000;
-  background-color: white;
-  color: #2e0baf;
-  cursor: pointer;
-  border-radius: 50%;
-  transition: all 0.3s ease;
-}
-
-.user-idea-input button.send-button:hover {
-  background-color: #ffd900;
-  color: rgb(0, 0, 0);
-  transform: translateY(-1px);
-}
-
-/* ... existing styles ... */
-
