@@ -245,11 +245,17 @@ const NodeWindow = ({
     }
   }, [shouldGenerateIdea]);
 
+  const apiNodeCount = nodes.filter(node => node.type === 'apiNode').length;
+  
+  // Only show window when dragging or when there are actual API nodes
+  const showWindow = isDraggingApiCard || isExpanded || apiNodeCount > 0;
+
+  // Modified auto-expand effect
   useEffect(() => {
-    if (nodes.length > 1 && !isExpanded) {
+    if (apiNodeCount > 0 && !isExpanded) {
       setIsNodeWindowExpanded(true);
     }
-  }, [nodes.length, isExpanded, setIsNodeWindowExpanded]);
+  }, [apiNodeCount, isExpanded, setIsNodeWindowExpanded]);
 
   const [, drop] = useDrop({
     accept: 'API_CARD',
@@ -363,7 +369,15 @@ const NodeWindow = ({
     setIsNodeWindowExpanded(true);
   };
 
-  const decoratedNodes = nodes.map(node => ({
+  // Filter nodes based on window state
+  const visibleNodes = nodes.filter(node => {
+    if (node.type === 'aiInterface') {
+      return isExpanded; // Only show AI interface when expanded
+    }
+    return true; // Always show API nodes
+  });
+
+  const decoratedNodes = visibleNodes.map(node => ({
     ...node,
     data: {
       ...node.data,
@@ -371,8 +385,6 @@ const NodeWindow = ({
       onRemove: () => removeNode(node.id)
     }
   }));
-
-  const showWindow = isDraggingApiCard || isExpanded || nodes.length > 0;
 
   return (
     <div 
@@ -421,7 +433,7 @@ const NodeWindow = ({
       )}
       <div className="node-window-content" style={{ width: '100%', height: '100%', position: 'relative', background: 'white' }}>
         <ReactFlow
-          nodes={decoratedNodes}
+          nodes={decoratedNodes} // Using filtered nodes
           edges={edges}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
