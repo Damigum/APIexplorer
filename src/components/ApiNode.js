@@ -4,7 +4,7 @@ import { X } from 'lucide-react';
 
 const ApiNode = ({ data }) => {
   const { api, getCategoryColor, onRemove } = data;
-  const categoryColor = api.Category ? getCategoryColor(api.Category) : "#000000";
+  const categoryColor = api.Category && getCategoryColor ? getCategoryColor(api.Category) : "#000000";
 
   return (
     <div className="api-node relative">
@@ -34,7 +34,7 @@ const ApiNode = ({ data }) => {
         onMouseEnter={(e) => {
           e.currentTarget.style.transform = 'translateY(-1px)';
           e.currentTarget.style.boxShadow = '0 4px 8px rgba(0,0,0,0.1)';
-          e.currentTarget.style.background = '#fee2e2'; // Light red hover
+          e.currentTarget.style.background = '#fee2e2';
         }}
         onMouseLeave={(e) => {
           e.currentTarget.style.transform = 'translateY(0)';
@@ -60,7 +60,3 @@ const ApiNode = ({ data }) => {
 };
 
 export default ApiNode;
-
-
-
-
