@@ -1,70 +1,48 @@
 // AiInterface.js
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Send } from 'lucide-react';
 import axios from 'axios';
 
 const AiInterface = ({ activeNodes, onAddNode, apis, setIsNodeWindowExpanded, isCollapsed }) => {
-  const [response, setResponse] = useState('');
+  const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [userIdea, setUserIdea] = useState('');
+  const [userInput, setUserInput] = useState('');
   const [error, setError] = useState(null);
+  const [previousNodeCount, setPreviousNodeCount] = useState(activeNodes.length);
+  const messagesEndRef = useRef(null);
 
-  const generateIdea = async (fromUserIdea = false) => {
-    if (fromUserIdea && !userIdea) {
-      return;
-    }
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, isLoading]);
+
+  const addMessage = (role, content) => {
+    setMessages(prevMessages => [...prevMessages, { role, content }]);
+  };
+
+  const generateResponse = async (newMessages) => {
+    if (isLoading) return; // Prevent multiple simultaneous generations
+    
     setIsLoading(true);
     setError(null);
     setIsNodeWindowExpanded(true);
 
-    let prompt;
-    let systemPrompt;
+    // Create context about current APIs
+    const apiContext = `Currently active APIs:\n${activeNodes.map(node => 
+      `- ${node.name}: ${node.description}`
+    ).join('\n')}`;
 
-    if (fromUserIdea) {
-      const apiList = apis.map(api => `${api.Name}: ${api.Description}`).join('\n');
-      prompt = `Given this list of available APIs:\n${apiList}\n\nThe user wants to build: ${userIdea}\n\nWhat APIs would be most useful for this project?`;
-      systemPrompt = `You are an AI assistant specialized in suggesting relevant APIs for user project ideas. Format your response in a clear, readable structure as follows:
+    const systemPrompt = {
+      role: 'system',
+      content: `You are an AI assistant specialized in suggesting and discussing APIs and their combinations for building applications. 
+      
+${apiContext}
 
-## Recommended APIs
-
-{For each recommended API, format as:}
-### [API Name]
-• Purpose: [Brief explanation of how this API serves the project]
-• Key Features: [1-2 key features that would be useful]
-• Integration: [Brief note on how it fits with other APIs]
-
-## Implementation Overview
-[2-3 sentences describing how these APIs would work together]
-
-## Technical Considerations
-• [2-3 bullet points about important technical aspects]`;
-    } else {
-      const nodesSummary = activeNodes.map(node => 
-        `${node.name}: ${node.description}`
-      ).join('\n');
-      prompt = `I have the following APIs:\n${nodesSummary}\n\nSuggest an innovative application or tool that combines these APIs in a useful way.`;
-      systemPrompt = `You are an AI assistant specialized in generating creative ideas for applications that combine multiple APIs. Format your response in a clear, structured way as follows:
-
-## Application Concept
-[2-3 sentences describing the core idea]
-
-## How It Works
-• [Break down the workflow using bullet points]
-• [Explain how each API contributes]
-• [Describe key interactions between APIs]
-
-## Key Features
-• [List 3-4 main features]
-
-## Technical Implementation
-• [API Integration Points]
-• [Data Flow]
-• [Key Considerations]
-
-## User Benefits
-• [List 2-3 main benefits]`;
-    }
+Important: Only suggest ideas using these currently active APIs. If the user asks about APIs that were removed, kindly remind them that those APIs are no longer available and suggest alternatives using the current set.`
+    };
 
     try {
       const result = await axios.post(
@@ -72,8 +50,13 @@ const AiInterface = ({ activeNodes, onAddNode, apis, setIsNodeWindowExpanded, is
         {
           model: 'llama-3.1-70b-versatile',
           messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: prompt }
+            systemPrompt,
+            ...newMessages.map(msg => ({
+              ...msg,
+              content: msg.role === 'user' 
+                ? `${apiContext}\n\nUser message: ${msg.content}`
+                : msg.content
+            }))
           ],
           max_tokens: 500,
           temperature: 0.7,
@@ -94,18 +77,7 @@ const AiInterface = ({ activeNodes, onAddNode, apis, setIsNodeWindowExpanded, is
       aiResponse = aiResponse.replace(/• (.*?)\n/g, '<div style="margin: 4px 0 4px 12px; position: relative;"><span style="position: absolute; left: -12px; color: #4a5568;">•</span>$1</div>\n');
       aiResponse = aiResponse.replace(/\n/g, '<br>');
       
-      setResponse(aiResponse);
-
-      if (fromUserIdea) {
-        const apiNames = aiResponse.match(/### (.*?)(?=<br>)/g) || [];
-        apiNames.forEach(nameMatch => {
-          const apiName = nameMatch.replace('### ', '').trim();
-          const api = apis.find(a => a.Name === apiName);
-          if (api) {
-            onAddNode(api);
-          }
-        });
-      }
+      addMessage('assistant', aiResponse);
     } catch (error) {
       console.error('Error calling Groq API:', error);
       setError(
@@ -115,22 +87,57 @@ const AiInterface = ({ activeNodes, onAddNode, apis, setIsNodeWindowExpanded, is
       );
     } finally {
       setIsLoading(false);
+      // Remove any thinking messages
+      setMessages(prev => prev.filter(m => m.role !== 'thinking'));
     }
   };
 
-  useEffect(() => {
-    if (!isCollapsed && activeNodes.length > 0) {
-      generateIdea(false);
-    }
-  }, [activeNodes, isCollapsed]);
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (userIdea.trim()) {
-      generateIdea(true);
-      setUserIdea('');
-    }
+    if (!userInput.trim() || isLoading) return;
+
+    const userMessage = userInput.trim();
+    setUserInput('');
+
+    addMessage('user', userMessage);
+    addMessage('thinking', 'Thinking...');
+
+    const messagesToSend = messages.filter(m => m.role !== 'thinking').concat([
+      { role: 'user', content: userMessage }
+    ]);
+
+    await generateResponse(messagesToSend);
   };
+
+  // Single effect to handle both initial generation and node changes
+  useEffect(() => {
+    const handleNodeChanges = async () => {
+      if (!isCollapsed && activeNodes.length > 0 && !isLoading) {
+        const shouldGenerateNew = 
+          activeNodes.length !== previousNodeCount || // Nodes changed
+          messages.length === 0; // Initial generation
+
+        if (shouldGenerateNew) {
+          setPreviousNodeCount(activeNodes.length);
+          
+          const initialMessage = {
+            role: 'user',
+            content: 'Please suggest an innovative application or tool that combines these APIs in a useful way.'
+          };
+
+          // Only add user message if it's the first generation
+          if (messages.length === 0) {
+            addMessage('user', initialMessage.content);
+          }
+          
+          addMessage('thinking', 'Thinking...');
+          await generateResponse([initialMessage]);
+        }
+      }
+    };
+
+    handleNodeChanges();
+  }, [activeNodes.length, isCollapsed]);
 
   return (
     <>
@@ -138,19 +145,24 @@ const AiInterface = ({ activeNodes, onAddNode, apis, setIsNodeWindowExpanded, is
         <div className="ai-interface">
           <h3>API Combination Ideas</h3>
           <div className="ai-response">
-            {isLoading ? (
-              <p>Generating ideas...</p>
-            ) : error ? (
+            {error ? (
               <div className="error-message" style={{ color: '#e53e3e', padding: '8px', borderRadius: '4px', backgroundColor: '#fff5f5' }}>
                 {error}
               </div>
             ) : (
               <div>
-                {activeNodes.length === 0 && !response ? (
+                {messages.length === 0 ? (
                   <p>Drop some API nodes or describe your project idea to get started!</p>
                 ) : (
-                  <div dangerouslySetInnerHTML={{ __html: response }} />
+                  messages.map((message, index) => (
+                    <div
+                      key={index}
+                      className={`message ${message.role}`}
+                      dangerouslySetInnerHTML={{ __html: message.content }}
+                    />
+                  ))
                 )}
+                <div ref={messagesEndRef} />
               </div>
             )}
           </div>
@@ -160,10 +172,10 @@ const AiInterface = ({ activeNodes, onAddNode, apis, setIsNodeWindowExpanded, is
         <form onSubmit={handleSubmit} className="user-idea-input">
           <input
             type="text"
-            value={userIdea}
-            onChange={(e) => setUserIdea(e.target.value)}
-            placeholder="Describe your project idea..."
-            aria-label="Project idea input"
+            value={userInput}
+            onChange={(e) => setUserInput(e.target.value)}
+            placeholder="Type your message..."
+            aria-label="Message input"
             disabled={isLoading}
           />
           <button 
