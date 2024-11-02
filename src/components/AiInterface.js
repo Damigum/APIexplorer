@@ -128,38 +128,47 @@ const AiInterface = ({ activeNodes, onAddNode, apis, setIsNodeWindowExpanded, is
     const relevantApis = getRelevantApis(lastUserMessage, apis);
     const apiList = relevantApis.map(api => `${api.Name}: ${api.Description}`).join('\n');
 
-    const apiContext = `Currently active APIs:\n${activeNodes.map(node => 
-      `- ${node.name}: ${node.description}`
-    ).join('\n')}`;
+    // Create a more detailed context about active nodes
+    const activeNodesContext = activeNodes.length > 0 
+      ? `Currently active nodes in your workspace:\n${activeNodes.map(node => 
+          `• ${node.name}: ${node.description}\n  Category: ${node.category}\n  URL: ${node.url}`
+        ).join('\n\n')}`
+      : 'No APIs currently selected.';
 
     const systemPrompt = {
       role: 'system',
       content: isInitialDrop ? 
-        `You are an AI assistant specialized in generating innovative ideas for applications using APIs. When suggesting APIs, wrap their names in double square brackets like this: [[API Name]]. Focus on practical solutions and explain how APIs can work together.
+        `You are an AI assistant specialized in generating innovative ideas for applications using APIs. You have access to the following workspace context:
 
-${apiContext}
+${activeNodesContext}
+
+When suggesting additional APIs to combine with the existing ones, wrap their names in double square brackets like this: [[API Name]].
 
 Available APIs for suggestions:
 ${apiList}
 
 Guidelines:
-- Suggest specific APIs by wrapping names in [[Name]] format
-- Explain how each suggested API helps
+- Always acknowledge and reference the currently active APIs in the workspace
+- Suggest how new APIs can specifically complement the existing ones
+- Explain practical integration possibilities between existing and suggested APIs
 - Keep responses concise and focused
-- Explain how APIs can work together` 
+- Provide concrete examples of how the APIs can work together` 
         :
-        `You are an AI assistant specialized in discussing APIs and their applications. When suggesting APIs, wrap their names in double square brackets like this: [[API Name]].
+        `You are an AI assistant specialized in discussing APIs and their applications. Current workspace context:
 
-${apiContext}
+${activeNodesContext}
+
+When suggesting APIs, wrap their names in double square brackets like this: [[API Name]].
 
 Available APIs for suggestions:
 ${apiList}
 
 Guidelines:
-- Suggest specific APIs by wrapping names in [[Name]] format
-- Focus on practical applications and solutions
-- Explain how APIs can be integrated together
-- Keep responses clear and concise`
+- Always acknowledge and build upon the currently active APIs in the workspace
+- Focus on practical applications and integration possibilities
+- Explain how suggested APIs can complement the existing ones
+- Keep responses clear and concise
+- Provide specific examples of API combinations`
     };
 
     try {
@@ -247,8 +256,8 @@ Guidelines:
           const initialMessage = {
             role: 'user',
             content: isInitialDrop
-              ? 'Generate an innovative application idea using these APIs.'
-              : 'What other interesting applications can be built with these APIs?'
+              ? `I've added ${activeNodes[activeNodes.length - 1].name} to the workspace. What can I build with it?`
+              : `I've added ${activeNodes[activeNodes.length - 1].name} to work with ${prevNodesRef.current.map(n => n.name).join(', ')}. What interesting applications can be built with this combination?`
           };
           
           if (!activeNodes.every(node => prevNodesRef.current.some(prev => prev.name === node.name))) {
