@@ -765,3 +765,278 @@ nav::before {
     background-position: -100% 0;
   }
 }
+
+.suggestion-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  color: #2d3748;
+  cursor: pointer;
+  font-family: 'Karla', sans-serif;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  margin-bottom: 8px;
+}
+
+.suggestion-button:hover {
+  transform: translateY(-1px);
+  background-color: #f7fafc;
+}
+
+.api-suggestion {
+  margin: 8px 0;
+  padding: 12px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.api-suggestion-description {
+  color: #4a5568;
+  font-size: 0.9em;
+}
+
+/* Add to App.css */
+.suggestion-tab {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  background: white;
+  border: 1px solid #000000;
+  border-radius: 12px;
+  color: #2e0baf;
+  cursor: pointer;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.8em;
+  font-weight: normal;
+  transition: all 0.2s ease;
+  margin: 4px 4px;
+}
+
+.suggestion-tab:hover {
+  background-color: #ffd900;
+  color: rgb(0, 0, 0);
+}
+
+.api-suggestion {
+  display: inline-block;
+  margin: 2px 4px;
+}
+
+.api-suggestion-description {
+  margin-top: 4px;
+  color: #666;
+  font-size: 0.8em;
+}
+
+.message.assistant .suggestion-tab {
+  background-color: white;
+  border: 1px solid #e2e8f0;
+}
+
+/* Add to App.css */
+.suggestion-tab {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  background: white;
+  border: 1px solid #000000;
+  border-radius: 12px;
+  color: #2e0baf;
+  cursor: pointer;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.8em;
+  margin: 4px 4px;
+  transition: all 0.2s ease;
+}
+
+.suggestion-tab:hover {
+  background-color: #ffd900;
+  color: rgb(0, 0, 0);
+}
+
+.suggestion-tab-disabled {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  background: #f5f5f5;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  color: #666;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.8em;
+  margin: 4px 4px;
+}
+
+.api-suggestion-description {
+  margin-top: 4px;
+  color: #666;
+  font-size: 0.8em;
+}
+
+/* Add to App.css */
+.suggestion-tab.clickable {
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background-color: #f3f4f6;
+  display: inline-block;
+  transition: all 0.2s ease;
+  border: 1px solid #e5e7eb;
+  color: #374151;
+  font-weight: 500;
+}
+
+.suggestion-tab.clickable:hover {
+  background-color: #e5e7eb;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.suggestion-tab.clickable:active {
+  transform: translateY(0);
+  background-color: #d1d5db;
+}
+
+.suggestion-tab-disabled {
+  padding: 4px 8px;
+  border-radius: 4px;
+  background-color: #f3f4f6;
+  display: inline-block;
+  border: 1px solid #e5e7eb;
+  color: #9ca3af;
+}
+
+.api-suggestion {
+  margin: 8px 0;
+}
+
+.api-suggestion-description {
+  margin-top: 4px;
+  color: #4b5563;
+  font-size: 0.9em;
+}
+
+/* Add to App.css */
+
+/* API suggestion styling */
+.api-suggestion {
+  display: inline-block;
+  margin: 2px 4px;
+  padding: 4px 0;
+}
+
+.api-suggestion-button {
+  background-color: #e3f2fd;
+  border: 1px solid #1565c0;
+  border-radius: 4px;
+  padding: 2px 6px;
+  margin: 0 4px;
+  color: #1565c0;
+  cursor: pointer;
+  font-size: 0.9em;
+  transition: all 0.2s ease;
+}
+
+.api-suggestion-button:hover {
+  background-color: #bbdefb;
+  transform: translateY(-1px);
+}
+
+/* Enhanced message styling */
+.message {
+  position: relative;
+  padding: 12px 16px;
+  margin: 8px 0;
+  border-radius: 8px;
+  line-height: 1.5;
+  max-width: 85%;
+}
+
+.message.user {
+  background-color: #e3f2fd;
+  margin-left: auto;
+  color: #1565c0;
+}
+
+.message.assistant {
+  background-color: #f5f5f5;
+  margin-right: auto;
+  color: #333;
+}
+
+.message.thinking {
+  background-color: #f0f9ff;
+  margin-right: auto;
+  color: #3182ce;
+  font-style: italic;
+  animation: pulse 1.5s infinite;
+}
+
+/* Improved AI interface container */
+.ai-interface {
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Enhanced scrollbar styling */
+.ai-response::-webkit-scrollbar {
+  width: 8px;
+}
+
+.ai-response::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.ai-response::-webkit-scrollbar-thumb {
+  background: #cbd5e0;
+  border-radius: 4px;
+}
+
+.ai-response::-webkit-scrollbar-thumb:hover {
+  background: #a0aec0;
+}
+
+/* Loading animation */
+@keyframes pulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
+}
+
+/* Message transition animations */
+.message {
+  animation: messageSlide 0.3s ease-out;
+}
+
+@keyframes messageSlide {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.typing-indicator {
+  color: #666;
+  font-size: 0.8em;
+  padding: 4px 8px;
+  margin: 4px 0;
+  font-style: italic;
+  animation: fadeInOut 1.5s ease-in-out infinite;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0.4; }
+  50% { opacity: 1; }
+  100% { opacity: 0.4; }
+}

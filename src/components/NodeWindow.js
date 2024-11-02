@@ -1,4 +1,3 @@
-// NodeWindow.js
 import React, { useRef, useEffect } from 'react';
 import ReactFlow, {
   Background,
@@ -58,25 +57,44 @@ const NodeWindow = ({
   }, [nodes]);
 
   useEffect(() => {
-    // Auto-expand when nodes are present
     if (nodes.length > 0 && !isExpanded) {
       setIsNodeWindowExpanded(true);
     }
   }, [nodes.length, isExpanded, setIsNodeWindowExpanded]);
 
-  const connectNewNodeToExisting = (newNodeId) => {
+  const addNode = (api, position = null) => {
+    const newNodeId = uuidv4();
+    const defaultPosition = {
+      x: Math.random() * 300,
+      y: Math.random() * 300
+    };
+
+    const newNode = {
+      id: newNodeId,
+      type: 'apiNode',
+      position: position || defaultPosition,
+      data: { 
+        api,
+        getCategoryColor,
+        onRemove: () => removeNode(newNodeId)
+      },
+    };
+
+    setNodes(nds => [...nds, newNode]);
+    
     if (nodes.length > 0) {
-      const lastNode = nodes[nodes.length - 1];
-      if (lastNode) {
-        const newEdge = {
-          id: `e${lastNode.id}-${newNodeId}`,
-          source: lastNode.id,
-          target: newNodeId,
-          ...defaultEdgeOptions,
-        };
-        setEdges(eds => [...eds, newEdge]);
-      }
+      const prevNode = nodes[nodes.length - 1];
+      const newEdge = {
+        id: `e${prevNode.id}-${newNodeId}`,
+        source: prevNode.id,
+        target: newNodeId,
+        ...defaultEdgeOptions,
+      };
+      setEdges(eds => [...eds, newEdge]);
     }
+
+    setIsNodeWindowExpanded(true);
+    return newNodeId;
   };
 
   const [, drop] = useDrop({
@@ -100,38 +118,9 @@ const NodeWindow = ({
         y: position.y / zoom
       };
 
-      const newNodeId = uuidv4();
-      const newNode = {
-        id: newNodeId,
-        type: 'apiNode',
-        position: adjustedPosition,
-        data: { 
-          api,
-          getCategoryColor,
-          onRemove: () => removeNode(newNodeId)
-        },
-      };
-
-      setNodes(nds => [...nds, newNode]);
-      
-      if (nodes.length > 0) {
-        const prevNode = nodes[nodes.length - 1];
-        const newEdge = {
-          id: `e${prevNode.id}-${newNodeId}`,
-          source: prevNode.id,
-          target: newNodeId,
-          ...defaultEdgeOptions,
-        };
-        setEdges(eds => [...eds, newEdge]);
-      }
-
-      setIsNodeWindowExpanded(true);
+      addNode(api, adjustedPosition);
     }
   });
-
-  useEffect(() => {
-    drop(nodeWindowRef);
-  }, [drop]);
 
   const onNodesChange = (changes) => {
     setNodes((nds) => applyNodeChanges(changes, nds));
@@ -156,48 +145,9 @@ const NodeWindow = ({
     ));
   };
 
-  const addNode = (api) => {
-    const newNodeId = uuidv4();
-    const position = {
-      x: Math.random() * 300,
-      y: Math.random() * 300
-    };
-
-    const newNode = {
-      id: newNodeId,
-      type: 'apiNode',
-      position,
-      data: { 
-        api,
-        getCategoryColor,
-        onRemove: () => removeNode(newNodeId)
-      },
-    };
-
-    setNodes((nds) => [...nds, newNode]);
-    
-    if (nodes.length > 0) {
-      const prevNode = nodes[nodes.length - 1];
-      const newEdge = {
-        id: `e${prevNode.id}-${newNodeId}`,
-        source: prevNode.id,
-        target: newNodeId,
-        ...defaultEdgeOptions,
-      };
-      setEdges(eds => [...eds, newEdge]);
-    }
-
-    setIsNodeWindowExpanded(true);
-  };
-
-  const decoratedNodes = nodes.map(node => ({
-    ...node,
-    data: {
-      ...node.data,
-      getCategoryColor,
-      onRemove: () => removeNode(node.id)
-    }
-  }));
+  useEffect(() => {
+    drop(nodeWindowRef);
+  }, [drop]);
 
   const showWindow = isDraggingApiCard || isExpanded || nodes.length > 0;
 
@@ -248,7 +198,7 @@ const NodeWindow = ({
       )}
       <div className="node-window-content" style={{ width: '100%', height: '100%', position: 'relative', background: 'white' }}>
         <ReactFlow
-          nodes={decoratedNodes}
+          nodes={nodes}
           edges={edges}
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
@@ -272,10 +222,11 @@ const NodeWindow = ({
           <div className="ai-interface-wrapper">
             <AiInterface 
               activeNodes={activeNodes} 
-              onAddNode={addNode}
+              onAddNode={(api) => addNode(api)}
               apis={apis}
               setIsNodeWindowExpanded={setIsNodeWindowExpanded}
               isCollapsed={false}
+              getCategoryColor={getCategoryColor}
             />
           </div>
         )}

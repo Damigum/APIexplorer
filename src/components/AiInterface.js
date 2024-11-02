@@ -1,15 +1,58 @@
-// AiInterface.js
 import React, { useState, useEffect, useRef } from 'react';
 import { Send } from 'lucide-react';
 import axios from 'axios';
+
+// Debounce utility function
+const debounce = (func, wait) => {
+  let timeout;
+  return function executedFunction(...args) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
+    };
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
+};
+
+const Message = ({ content, type, onAddApi }) => {
+  // Format content to handle API suggestions with [[Name]] syntax
+  const formatApiSuggestion = (text) => {
+    return text.split(/(\[\[[^\]]+\]\])/).map((part, index) => {
+      const apiNameMatch = part.match(/\[\[(.*?)\]\]/);
+      if (apiNameMatch) {
+        const apiName = apiNameMatch[1];
+        return (
+          <button
+            key={index}
+            onClick={() => onAddApi(apiName)}
+            className="suggestion-tab clickable"
+          >
+            Add {apiName}
+          </button>
+        );
+      }
+      return <span key={index}>{part}</span>;
+    });
+  };
+
+  return (
+    <div className={`message ${type}`}>
+      {type === 'assistant' ? formatApiSuggestion(content) : content}
+    </div>
+  );
+};
 
 const AiInterface = ({ activeNodes, onAddNode, apis, setIsNodeWindowExpanded, isCollapsed }) => {
   const [messages, setMessages] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [userInput, setUserInput] = useState('');
   const [error, setError] = useState(null);
-  const [previousNodeCount, setPreviousNodeCount] = useState(activeNodes.length);
+  const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
+  const prevNodesRef = useRef([]);
+  const prevNodesStringified = useRef('');
+  const typingTimeoutRef = useRef(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -19,29 +62,104 @@ const AiInterface = ({ activeNodes, onAddNode, apis, setIsNodeWindowExpanded, is
     scrollToBottom();
   }, [messages, isLoading]);
 
+  // Typing indicator effect
+  useEffect(() => {
+    if (userInput) {
+      setIsTyping(true);
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+      typingTimeoutRef.current = setTimeout(() => {
+        setIsTyping(false);
+      }, 1000);
+    }
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+    };
+  }, [userInput]);
+
+  // Get relevant APIs based on user input
+  const getRelevantApis = (input, allApis) => {
+    const keywords = input.toLowerCase().split(/\s+/);
+    return allApis.filter(api => {
+      const description = (api.Description || '').toLowerCase();
+      const name = (api.Name || '').toLowerCase();
+      const category = (api.Category || '').toLowerCase();
+      
+      // Calculate relevance score
+      let score = 0;
+      keywords.forEach(keyword => {
+        if (name.includes(keyword)) score += 3;
+        if (description.includes(keyword)) score += 2;
+        if (category.includes(keyword)) score += 1;
+      });
+      
+      return score > 0;
+    }).sort((a, b) => {
+      // Sort by how closely the API name matches the input
+      const aMatch = keywords.some(k => a.Name.toLowerCase().includes(k));
+      const bMatch = keywords.some(k => b.Name.toLowerCase().includes(k));
+      return bMatch - aMatch;
+    }).slice(0, 15);
+  };
+
+  const handleApiClick = (apiName) => {
+    const api = apis.find(a => a.Name === apiName);
+    if (api) {
+      onAddNode(api);
+    }
+  };
+
   const addMessage = (role, content) => {
     setMessages(prevMessages => [...prevMessages, { role, content }]);
   };
 
-  const generateResponse = async (newMessages) => {
-    if (isLoading) return; // Prevent multiple simultaneous generations
+  const generateResponse = async (newMessages, isInitialDrop = false) => {
+    if (isLoading) return;
     
     setIsLoading(true);
     setError(null);
     setIsNodeWindowExpanded(true);
 
-    // Create context about current APIs
+    // Get relevant APIs based on the last user message
+    const lastUserMessage = newMessages.findLast(msg => msg.role === 'user')?.content || '';
+    const relevantApis = getRelevantApis(lastUserMessage, apis);
+    const apiList = relevantApis.map(api => `${api.Name}: ${api.Description}`).join('\n');
+
     const apiContext = `Currently active APIs:\n${activeNodes.map(node => 
       `- ${node.name}: ${node.description}`
     ).join('\n')}`;
 
     const systemPrompt = {
       role: 'system',
-      content: `You are an AI assistant specialized in suggesting and discussing APIs and their combinations for building applications. 
-      
+      content: isInitialDrop ? 
+        `You are an AI assistant specialized in generating innovative ideas for applications using APIs. When suggesting APIs, wrap their names in double square brackets like this: [[API Name]]. Focus on practical solutions and explain how APIs can work together.
+
 ${apiContext}
 
-Important: Only suggest ideas using these currently active APIs. If the user asks about APIs that were removed, kindly remind them that those APIs are no longer available and suggest alternatives using the current set.`
+Available APIs for suggestions:
+${apiList}
+
+Guidelines:
+- Suggest specific APIs by wrapping names in [[Name]] format
+- Explain how each suggested API helps
+- Keep responses concise and focused
+- Explain how APIs can work together` 
+        :
+        `You are an AI assistant specialized in discussing APIs and their applications. When suggesting APIs, wrap their names in double square brackets like this: [[API Name]].
+
+${apiContext}
+
+Available APIs for suggestions:
+${apiList}
+
+Guidelines:
+- Suggest specific APIs by wrapping names in [[Name]] format
+- Focus on practical applications and solutions
+- Explain how APIs can be integrated together
+- Keep responses clear and concise`
     };
 
     try {
@@ -54,7 +172,7 @@ Important: Only suggest ideas using these currently active APIs. If the user ask
             ...newMessages.map(msg => ({
               ...msg,
               content: msg.role === 'user' 
-                ? `${apiContext}\n\nUser message: ${msg.content}`
+                ? `${msg.content}\n\nRelevant APIs:\n${apiList}`
                 : msg.content
             }))
           ],
@@ -69,15 +187,9 @@ Important: Only suggest ideas using these currently active APIs. If the user ask
         }
       );
 
-      let aiResponse = result.data.choices[0].message.content;
-      
-      // Style the response
-      aiResponse = aiResponse.replace(/## (.*?)\n/g, '<h2 style="color: #2d3748; margin: 16px 0 8px 0; font-size: 1.2em;">$1</h2>\n');
-      aiResponse = aiResponse.replace(/### (.*?)\n/g, '<h3 style="color: #4a5568; margin: 12px 0 6px 0; font-size: 1.1em;">$1</h3>\n');
-      aiResponse = aiResponse.replace(/• (.*?)\n/g, '<div style="margin: 4px 0 4px 12px; position: relative;"><span style="position: absolute; left: -12px; color: #4a5568;">•</span>$1</div>\n');
-      aiResponse = aiResponse.replace(/\n/g, '<br>');
-      
+      const aiResponse = result.data.choices[0].message.content;
       addMessage('assistant', aiResponse);
+
     } catch (error) {
       console.error('Error calling Groq API:', error);
       setError(
@@ -87,7 +199,6 @@ Important: Only suggest ideas using these currently active APIs. If the user ask
       );
     } finally {
       setIsLoading(false);
-      // Remove any thinking messages
       setMessages(prev => prev.filter(m => m.role !== 'thinking'));
     }
   };
@@ -102,42 +213,59 @@ Important: Only suggest ideas using these currently active APIs. If the user ask
     addMessage('user', userMessage);
     addMessage('thinking', 'Thinking...');
 
-    const messagesToSend = messages.filter(m => m.role !== 'thinking').concat([
-      { role: 'user', content: userMessage }
-    ]);
-
-    await generateResponse(messagesToSend);
+    let retries = 3;
+    while (retries > 0) {
+      try {
+        const messagesToSend = messages
+          .filter(m => m.role !== 'thinking')
+          .concat([{ role: 'user', content: userMessage }]);
+        
+        await generateResponse(messagesToSend, false);
+        break;
+      } catch (error) {
+        retries--;
+        if (retries === 0) {
+          setError('Failed to get response after multiple attempts. Please try again.');
+          setMessages(prev => prev.filter(m => m.role !== 'thinking'));
+        } else {
+          // Wait before retrying
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      }
+    }
   };
 
-  // Single effect to handle both initial generation and node changes
   useEffect(() => {
     const handleNodeChanges = async () => {
       if (!isCollapsed && activeNodes.length > 0 && !isLoading) {
-        const shouldGenerateNew = 
-          activeNodes.length !== previousNodeCount || // Nodes changed
-          messages.length === 0; // Initial generation
-
-        if (shouldGenerateNew) {
-          setPreviousNodeCount(activeNodes.length);
+        const currentNodesString = JSON.stringify(activeNodes);
+        
+        if (currentNodesString !== prevNodesStringified.current) {
+          prevNodesStringified.current = currentNodesString;
           
+          const isInitialDrop = prevNodesRef.current.length === 0;
           const initialMessage = {
             role: 'user',
-            content: 'Please suggest an innovative application or tool that combines these APIs in a useful way.'
+            content: isInitialDrop
+              ? 'Generate an innovative application idea using these APIs.'
+              : 'What other interesting applications can be built with these APIs?'
           };
-
-          // Only add user message if it's the first generation
-          if (messages.length === 0) {
-            addMessage('user', initialMessage.content);
+          
+          if (!activeNodes.every(node => prevNodesRef.current.some(prev => prev.name === node.name))) {
+            setMessages([]);
           }
           
+          prevNodesRef.current = activeNodes;
+          
+          addMessage('user', initialMessage.content);
           addMessage('thinking', 'Thinking...');
-          await generateResponse([initialMessage]);
+          await generateResponse([initialMessage], isInitialDrop);
         }
       }
     };
 
     handleNodeChanges();
-  }, [activeNodes.length, isCollapsed]);
+  }, [activeNodes, isCollapsed, isLoading]);
 
   return (
     <>
@@ -146,7 +274,7 @@ Important: Only suggest ideas using these currently active APIs. If the user ask
           <h3>API Combination Ideas</h3>
           <div className="ai-response">
             {error ? (
-              <div className="error-message" style={{ color: '#e53e3e', padding: '8px', borderRadius: '4px', backgroundColor: '#fff5f5' }}>
+              <div className="error-message">
                 {error}
               </div>
             ) : (
@@ -155,39 +283,43 @@ Important: Only suggest ideas using these currently active APIs. If the user ask
                   <p>Drop some API nodes or describe your project idea to get started!</p>
                 ) : (
                   messages.map((message, index) => (
-                    <div
+                    <Message
                       key={index}
-                      className={`message ${message.role}`}
-                      dangerouslySetInnerHTML={{ __html: message.content }}
+                      type={message.role}
+                      content={message.content}
+                      onAddApi={handleApiClick}
                     />
                   ))
+                )}
+                {isTyping && (
+                  <div className="typing-indicator">
+                    Assistant is typing...
+                  </div>
                 )}
                 <div ref={messagesEndRef} />
               </div>
             )}
           </div>
+          <form onSubmit={handleSubmit} className="user-idea-input">
+            <input
+              type="text"
+              value={userInput}
+              onChange={(e) => setUserInput(e.target.value)}
+              placeholder="Type your message..."
+              aria-label="Message input"
+              disabled={isLoading}
+            />
+            <button 
+              type="submit"
+              aria-label="Send"
+              className="send-button"
+              disabled={isLoading}
+            >
+              <Send size={18} />
+            </button>
+          </form>
         </div>
       )}
-      <div className="user-idea-input-container">
-        <form onSubmit={handleSubmit} className="user-idea-input">
-          <input
-            type="text"
-            value={userInput}
-            onChange={(e) => setUserInput(e.target.value)}
-            placeholder="Type your message..."
-            aria-label="Message input"
-            disabled={isLoading}
-          />
-          <button 
-            type="submit"
-            aria-label="Send"
-            className="send-button"
-            disabled={isLoading}
-          >
-            <Send size={18} />
-          </button>
-        </form>
-      </div>
     </>
   );
 };
