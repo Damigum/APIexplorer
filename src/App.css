@@ -58,6 +58,7 @@ h1 {
   justify-content: center;
   gap: 16px;
   padding: 0 20px;
+  flex-wrap: wrap;
 }
 
 .tab {
@@ -385,7 +386,7 @@ nav::before {
 }
 
 .ai-response {
-  max-height: 200px;
+  max-height: 1000px;
   overflow-y: auto;
   padding-right: 8px;
   scroll-behavior: smooth;
@@ -411,27 +412,28 @@ nav::before {
   border-radius: 8px;
   font-size: 0.9em;
   line-height: 1.4;
+  background: none;
 }
 
 .message.user {
-  background-color: #e3f2fd;
   margin-left: 20%;
   text-align: right;
   color: #1565c0;
+  background: none;
 }
 
 .message.assistant {
-  background-color: #f5f5f5;
   margin-right: 20%;
   color: #333;
+  background: none;
 }
 
 .message.thinking {
-  background-color: #f0f9ff;
   margin-right: 20%;
   color: #3182ce;
   font-style: italic;
   animation: pulse 1.5s infinite;
+  background: none;
 }
 
 @keyframes pulse {
@@ -455,10 +457,10 @@ nav::before {
 
 .user-idea-input {
   position: fixed;
-  bottom: 10px;
+  bottom: 20px;
   right: 50px;
   z-index: 1000;
-  width: 400px;
+  width: calc(26% - 16px);
   display: flex;
   justify-content: center;
   background-color: #eaf0f5;
@@ -950,28 +952,28 @@ nav::before {
 /* Enhanced message styling */
 .message {
   position: relative;
-  padding: 12px 16px;
-  margin: 8px 0;
+  padding: 8px 12px;
+  margin: 4px 0;
   border-radius: 8px;
-  line-height: 1.5;
-  max-width: 85%;
+  line-height: 1.4;
+  max-width: 100%;
 }
 
 .message.user {
   background-color: #e3f2fd;
-  margin-left: auto;
+  margin-left: 0;
   color: #1565c0;
 }
 
 .message.assistant {
   background-color: #f5f5f5;
-  margin-right: auto;
+  margin-right: 0;
   color: #333;
 }
 
 .message.thinking {
   background-color: #f0f9ff;
-  margin-right: auto;
+  margin-right: 0;
   color: #3182ce;
   font-style: italic;
   animation: pulse 1.5s infinite;
@@ -986,17 +988,17 @@ nav::before {
 
 /* Enhanced scrollbar styling */
 .ai-response::-webkit-scrollbar {
-  width: 8px;
+  width: 4px;
 }
 
 .ai-response::-webkit-scrollbar-track {
   background: #f1f1f1;
-  border-radius: 4px;
+  border-radius: 2px;
 }
 
 .ai-response::-webkit-scrollbar-thumb {
-  background: #cbd5e0;
-  border-radius: 4px;
+  background: #ccc;
+  border-radius: 2px;
 }
 
 .ai-response::-webkit-scrollbar-thumb:hover {
@@ -1039,4 +1041,674 @@ nav::before {
   0% { opacity: 0.4; }
   50% { opacity: 1; }
   100% { opacity: 0.4; }
+}
+
+/* Add to App.css */
+.enhanced-ai-interface {
+  width: 25%;
+  height: calc(100vh - 200px);
+  transition: all 0.3s ease;
+  position: fixed;
+  right: 0;
+  top: 145px;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+  border-radius: 8px;
+  margin-right: 8px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.enhanced-ai-interface.show {
+  opacity: 1;
+  width: 26%;
+  pointer-events: all;
+}
+
+.enhanced-ai-interface.expanded {
+  width: calc(50% - 20px);
+  opacity: 1;
+  pointer-events: all;
+  z-index: 1001;
+}
+
+.enhanced-ai-interface h3 {
+  margin: 0 0 16px 0;
+  font-size: 1.1em;
+  color: #333;
+  padding-right: 40px;
+  flex-shrink: 0;
+}
+
+.enhanced-ai-interface .ai-response {
+  flex-grow: 1;
+  overflow-y: auto;
+  padding-right: 8px;
+  margin-bottom: 16px;
+  min-height: 0;
+  height: 100%;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.enhanced-ai-interface .user-idea-input {
+  position: relative;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  gap: 8px;
+  padding: 8px 0;
+}
+
+/* Update existing main container styles */
+.main-container.expanded .api-list-container {
+  width: 50%;
+}
+
+/* Media Queries */
+@media screen and (max-width: 1024px) {
+  .enhanced-ai-interface {
+    width: 35%;
+  }
+  
+  .enhanced-ai-interface.expanded {
+    width: 60%;
+  }
+  
+  .main-container.expanded .api-list-container {
+    width: 40%;
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .enhanced-ai-interface {
+    height: calc(100vh - 100px);
+    width: 100%;
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    right: 0;
+    z-index: 1000;
+    border-top-left-radius: 16px;
+    border-top-right-radius: 16px;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+  }
+  
+  .enhanced-ai-interface.show {
+    width: 100%;
+  }
+  
+  .enhanced-ai-interface.expanded {
+    height: calc(100vh - 80px);
+    width: 100%;
+  }
+  
+  .main-container.expanded .api-list-container {
+    width: 100%;
+    margin-bottom: 50vh;
+  }
+  
+  .user-idea-input {
+    padding: 8px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .enhanced-ai-interface {
+    padding: 12px;
+  }
+  
+  .enhanced-ai-interface h3 {
+    font-size: 1em;
+  }
+}
+
+/* Landscape mode */
+@media screen and (max-width: 896px) and (orientation: landscape) {
+  .enhanced-ai-interface {
+    height: calc(100vh - 60px);
+    width: 45%;
+    position: absolute;
+    top: 0;
+  }
+  
+  .enhanced-ai-interface.expanded {
+    width: 60%;
+  }
+  
+  .main-container.expanded .api-list-container {
+    width: 40%;
+    margin-bottom: 0;
+  }
+}
+
+/* Add message input container styles */
+.message-input-container {
+  position: fixed;
+  bottom: 20px;
+  right: 16px;
+  width: calc(26% - 16px);
+  z-index: 1001;
+  transition: all 0.3s ease;
+}
+
+.message-input-container.expanded {
+  width: calc(50% - 40px);
+}
+
+.message-input {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  padding: 8px;
+  border-radius: 10px;
+}
+
+.message-input input {
+  flex-grow: 1;
+  padding: 8px 12px;
+  border: 1px solid #000000;
+  border-radius: 15px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.9em;
+  background-color: white;
+  color: #333;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.message-input input:focus {
+  outline: none;
+  border-color: #0066cc;
+  box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.1);
+}
+
+.message-input button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  min-width: 36px;
+  height: 36px;
+  border: 1px solid #000000;
+  background-color: white;
+  color: #2e0baf;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.message-input button.send-button:hover {
+  background-color: #ffd900;
+  color: rgb(0, 0, 0);
+  transform: translateY(-1px);
+}
+
+/* Media query for responsive design */
+@media screen and (max-width: 768px) {
+  .message-input-container {
+    width: calc(100% - 32px);
+    right: 16px;
+    bottom: 80px;
+  }
+
+  .message-input-container.expanded {
+    width: calc(100% - 32px);
+  }
+
+  .message-input {
+    padding: 4px;
+  }
+}
+
+/* Remove old user-idea-input styles if they exist */
+.user-idea-input,
+.user-idea-input-container {
+  display: none;
+}
+
+/* Add these styles for markdown formatting */
+.message.assistant h3 {
+  font-size: 1.1em;
+  font-weight: 600;
+  margin-top: 1.2em;
+  margin-bottom: 0.8em;
+  color: #2d3748;
+}
+
+.message.assistant ul {
+  margin-left: 1.5em;
+  margin-bottom: 1em;
+}
+
+.message.assistant li {
+  margin-bottom: 0.5em;
+  line-height: 1.5;
+}
+
+.message.assistant p {
+  margin-bottom: 1em;
+  line-height: 1.6;
+}
+
+.message.assistant code {
+  padding: 0.2em 0.4em;
+  border-radius: 3px;
+  font-family: monospace;
+  font-size: 0.9em;
+  background: none;
+}
+
+.message.assistant pre {
+  padding: 1em;
+  border-radius: 6px;
+  overflow-x: auto;
+  margin: 1em 0;
+  background: none;
+}
+
+/* API suggestion button styles */
+.api-suggestion-button {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  margin: 0 4px;
+  background-color: #f0f9ff;
+  border: 1px solid #3b82f6;
+  border-radius: 12px;
+  color: #2563eb;
+  font-size: 0.9em;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.api-suggestion-button:hover {
+  background-color: #dbeafe;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.api-suggestion-button:active {
+  transform: translateY(0);
+}
+
+.api-suggestion-disabled {
+  background-color: #f3f4f6;
+  border-color: #d1d5db;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.api-suggestion-disabled:hover {
+  background-color: #f3f4f6;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Ensure buttons don't break the flow */
+.message.assistant p,
+.message.assistant li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Add new styles for the selected APIs section */
+.selected-apis-section {
+  margin-bottom: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.selected-apis-section:empty {
+  display: none;
+}
+
+.mini-api-card {
+  min-width: 5%;
+  background: rgb(255, 118, 118);
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 8px 16px;
+  color: #666;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-grow: 0;
+  flex-shrink: 0;
+  width: fit-content;
+  transition: all 0.2s ease;
+}
+
+.mini-api-card .api-name {
+  font-size: 0.8em;
+  white-space: nowrap;
+  text-align: center;
+}
+
+/* Update message styles to remove all backgrounds */
+.message {
+  margin: 12px 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 0.9em;
+  line-height: 1.4;
+  background: none;
+}
+
+.message.user {
+  margin-left: 20%;
+  text-align: right;
+  color: #1565c0;
+  background: none;
+}
+
+.message.assistant {
+  margin-right: 20%;
+  color: #333;
+  background: none;
+}
+
+.message.thinking {
+  margin-right: 20%;
+  color: #3182ce;
+  font-style: italic;
+  animation: pulse 1.5s infinite;
+  background: none;
+}
+
+/* Also ensure markdown elements have no background */
+.message.assistant code {
+  padding: 0.2em 0.4em;
+  border-radius: 3px;
+  font-family: monospace;
+  font-size: 0.9em;
+  background: none;
+}
+
+.message.assistant pre {
+  padding: 1em;
+  border-radius: 6px;
+  overflow-x: auto;
+  margin: 1em 0;
+  background: none;
+}
+
+/* Remove any background from the enhanced AI interface */
+.enhanced-ai-interface {
+  background: none;
+}
+
+.ai-response {
+  background: none;
+}
+
+/* Add to your existing tab styles */
+.tab.active[aria-label="Toggle Free APIs"] {
+  background: #4CAF50;
+  color: white;
+}
+
+.tab[aria-label="Toggle Free APIs"]:hover {
+  background: #45a049;
+}
+
+/* Update the existing tab styles to accommodate the new button */
+.tab-container {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+  padding: 0 20px;
+  flex-wrap: wrap;
+}
+
+.tab {
+  /* Existing styles... */
+  transition: all 0.2s ease;
+}
+
+/* Add a special style for the Filter icon when active */
+.tab.active .lucide-filter {
+  color: #ffd900;
+}
+
+/* Add to your existing styles */
+
+.heading-with-button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.code-generation-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: white;
+  border: 1px solid #000000;
+  border-radius: 15px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.9em;
+  color: #2e0baf;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.code-generation-button:hover {
+  background-color: #ffd900;
+  color: rgb(0, 0, 0);
+  transform: translateY(-1px);
+}
+
+.code-generation-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Style for code blocks in AI response */
+.message.assistant pre {
+  background: #f8f9fa;
+  padding: 16px;
+  border-radius: 8px;
+  overflow-x: auto;
+  margin: 16px 0;
+  border: 1px solid #e9ecef;
+}
+
+.message.assistant code {
+  font-family: 'Fira Code', monospace;
+  font-size: 0.9em;
+}
+
+/* Add copy button for code blocks */
+.code-block-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px;
+  background: #f1f3f5;
+  border-top-left-radius: 8px;
+  border-top-right-radius: 8px;
+  border: 1px solid #e9ecef;
+  border-bottom: none;
+}
+
+.copy-button {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: white;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  font-size: 0.8em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.copy-button:hover {
+  background: #f8f9fa;
+  transform: translateY(-1px);
+}
+
+.launch-preview-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: #4CAF50;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-family: 'Nunito', sans-serif;
+  font-size: 1em;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin: 16px 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.launch-preview-button:hover {
+  background: #45a049;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.launch-preview-button:active {
+  transform: translateY(0);
+}
+
+/* Style code blocks */
+.message.assistant pre {
+  background: #f8f9fa;
+  padding: 16px;
+  border-radius: 8px;
+  overflow-x: auto;
+  margin: 16px 0;
+  border: 1px solid #e9ecef;
+  position: relative;
+}
+
+.message.assistant pre code {
+  font-family: 'Fira Code', monospace;
+  font-size: 0.9em;
+  line-height: 1.5;
+}
+
+/* Add language labels to code blocks */
+.message.assistant pre::before {
+  content: attr(data-language);
+  position: absolute;
+  top: 0;
+  right: 16px;
+  padding: 4px 8px;
+  font-size: 0.8em;
+  color: #666;
+  background: #f8f9fa;
+  border-bottom-left-radius: 4px;
+  border-bottom-right-radius: 4px;
+  border: 1px solid #e9ecef;
+  border-top: none;
+}
+
+/* Update card styles */
+.api-card {
+  width: 240px;
+  height: 115px;
+  background: #fff;
+  box-shadow: 0 1px 25px rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+  padding: 15px;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+}
+
+.api-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 30px rgba(0, 0, 0, 0.3);
+}
+
+/* Logo circle styles */
+.api-logo-container {
+  width: 50px;
+  height: 50px;
+  position: absolute;
+  top: 50%;
+  left: 15px;
+  transform: translateY(-50%);
+  border-radius: 50%;
+  overflow: hidden;
+  background: linear-gradient(120deg, #e5e5e5 30%, #f0f0f0 38%, #f0f0f0 40%, #e5e5e5 48%);
+  background-size: 200% 100%;
+  background-position: 100% 0;
+  animation: load89234 2s infinite;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.api-logo {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.api-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+/* Content positioning */
+.api-content {
+  margin-left: 70px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+@keyframes load89234 {
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+.api-logo-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    120deg,
+    transparent,
+    rgba(255, 255, 255, 0.4),
+    transparent
+  );
+  transition: 0.5s;
+  opacity: 0;
+  z-index: 1;
+}
+
+.api-card:hover .api-logo-container::before {
+  left: 100%;
+  opacity: 1;
 }

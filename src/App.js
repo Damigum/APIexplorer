@@ -1,15 +1,26 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { ReactFlowProvider } from 'react-flow-renderer';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
-import { Database, Cpu, BookOpen, Blocks } from 'lucide-react';
+import { Database, Cpu, BookOpen, Blocks, Filter } from 'lucide-react';
 import ApiList from './components/ApiList';
 import Pagination from './components/Pagination';
-import NodeWindow from './components/NodeWindow';
+import EnhancedAiInterface from './components/EnhancedAiInterface';
 import apiData from './apiData.json';
 import { getCategoryColor } from './categoryData';
-import { v4 as uuidv4 } from 'uuid';
 import './App.css';
+
+const freeApis = [
+  'HTTP Cat', 'HTTP Dogs', 'RandomDog', 'RandomFox', 'Shibe.Online',
+  'Open Library', 'Bhagavad Gita', 'British National Bibliography',
+  'Nager.Date', "Abstract's Holiday API",
+  'JSONPlaceholder', 'ReqRes', 'Public APIs',
+  'Deck of Cards', 'PokéAPI', 'Open Trivia',
+  'Data.gov', 'Open Government, USA', 'Census.gov',
+  'Numbers API', 'Newton',
+  'Breaking Bad Quotes', 'Kanye.rest',
+  'Open Notify', 'NASA',
+  'Open-Meteo', '7Timer!'
+];
 
 const shuffleArray = (array) => {
   const newArray = [...array];
@@ -25,15 +36,19 @@ function App() {
   const [currentPage, setCurrentPage] = useState(1);
   const [apisPerPage] = useState(30);
   const [randomizedApis, setRandomizedApis] = useState([]);
-  const [nodes, setNodes] = useState([]);
-  const [edges, setEdges] = useState([]);
-  const [isNodeWindowExpanded, setIsNodeWindowExpanded] = useState(false);
+  const [activeNodes, setActiveNodes] = useState([]);
+  const [isInterfaceExpanded, setIsInterfaceExpanded] = useState(false);
   const [isDraggingApiCard, setIsDraggingApiCard] = useState(false);
+  const [showFreeOnly, setShowFreeOnly] = useState(false);
 
   useEffect(() => {
     const flattenedApis = Object.values(apiData).flat();
-    setRandomizedApis(shuffleArray(flattenedApis));
-  }, []);
+    const filteredApis = showFreeOnly 
+      ? flattenedApis.filter(api => freeApis.includes(api.Name))
+      : flattenedApis;
+    setRandomizedApis(shuffleArray(filteredApis));
+    setCurrentPage(1);
+  }, [showFreeOnly]);
 
   const indexOfLastApi = currentPage * apisPerPage;
   const indexOfFirstApi = indexOfLastApi - apisPerPage;
@@ -41,17 +56,16 @@ function App() {
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
-  const onApiDrop = useCallback((api, position) => {
+  const handleAddNode = useCallback((api) => {
     const newNode = {
-      id: uuidv4(),
-      type: 'apiNode',
-      position,
-      data: { api, getCategoryColor },
+      name: api.Name,
+      category: api.Category,
+      description: api.Description,
+      url: api.URL
     };
 
-    setNodes((nds) => [...nds, newNode]);
-    setIsNodeWindowExpanded(true);
-    setIsDraggingApiCard(false);
+    setActiveNodes((prev) => [...prev, newNode]);
+    setIsInterfaceExpanded(true);
   }, []);
 
   const onDragStart = useCallback(() => {
@@ -96,9 +110,16 @@ function App() {
               <Blocks size={20} />
               <span>Building Blocks</span>
             </button>
+            <button
+              onClick={() => setShowFreeOnly(!showFreeOnly)}
+              className={`tab ${showFreeOnly ? 'active' : ''}`}
+            >
+              <Filter size={20} />
+              <span>{showFreeOnly ? 'Free APIs' : 'All APIs'}</span>
+            </button>
           </div>
         </div>
-        <div className={`main-container ${isNodeWindowExpanded ? 'expanded' : ''}`}>
+        <div className={`main-container ${isInterfaceExpanded ? 'expanded' : ''}`}>
           <div className="api-list-container">
             <ApiList 
               apis={currentApis} 
@@ -113,19 +134,19 @@ function App() {
               currentPage={currentPage}
             />
           </div>
-          <ReactFlowProvider>
-            <NodeWindow 
-              nodes={nodes} 
-              edges={edges} 
-              setNodes={setNodes} 
-              setEdges={setEdges} 
-              onApiDrop={onApiDrop}
-              isExpanded={isNodeWindowExpanded}
-              setIsNodeWindowExpanded={setIsNodeWindowExpanded}
-              isDraggingApiCard={isDraggingApiCard}
-              apis={randomizedApis}
-            />
-          </ReactFlowProvider>
+          <EnhancedAiInterface 
+            activeNodes={activeNodes}
+            onAddNode={handleAddNode}
+            apis={randomizedApis}
+            setIsInterfaceExpanded={setIsInterfaceExpanded}
+            isCollapsed={false}
+            isExpanded={isInterfaceExpanded}
+            isDraggingApiCard={isDraggingApiCard}
+            freeApis={freeApis}
+          />
+        </div>
+        <div className="attribution">
+          <a href="https://logo.dev" alt="Logo API">Logos provided by Logo.dev</a>
         </div>
       </div>
     </DndProvider>
@@ -133,13 +154,3 @@ function App() {
 }
 
 export default App;
-
-
-
-
-
-
-
-
-
-
