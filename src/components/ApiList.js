@@ -2,6 +2,10 @@ import React from 'react';
 import ApiCard from './ApiCard';
 
 const ApiList = ({ apis, getCategoryColor, onDragStart, onDragEnd }) => {
+  const handleSelect = (api) => {
+    window.open(api.URL, '_blank', 'noopener,noreferrer');
+  };
+
   return (
     <div className="api-list">
       {apis.map((api, index) => {
@@ -13,6 +17,7 @@ const ApiList = ({ apis, getCategoryColor, onDragStart, onDragEnd }) => {
               getCategoryColor={getCategoryColor}
               onDragStart={onDragStart}
               onDragEnd={onDragEnd}
+              onSelect={handleSelect}
             />
           );
         }

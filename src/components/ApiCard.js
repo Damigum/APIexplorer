@@ -18,7 +18,12 @@ const ApiCard = ({ api, getCategoryColor, onDragStart, onDragEnd, onSelect, isSe
   });
 
   const handleClick = () => {
-    window.open(api.URL, '_blank', 'noopener,noreferrer');
+    if (typeof onSelect === 'function') {
+      onSelect(api);
+    } else {
+      // Fallback behavior - direct navigation
+      window.open(api.URL, '_blank', 'noopener,noreferrer');
+    }
   };
 
   const categoryColor = api.Category ? getCategoryColor(api.Category) : "#000000";
@@ -40,7 +45,7 @@ const ApiCard = ({ api, getCategoryColor, onDragStart, onDragEnd, onSelect, isSe
     <div
       ref={drag}
       className={`api-card ${isDragging ? 'dragging' : ''} ${isSelected ? 'selected' : ''}`}
-      onClick={() => onSelect(api)}
+      onClick={handleClick}
       style={{ opacity: isDragging ? 0.5 : 1 }}
     >
       <div className="api-logo-container">
