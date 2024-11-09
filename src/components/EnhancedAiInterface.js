@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Send, Code } from 'lucide-react';
+import { Send, Code, MessageSquare, Layout } from 'lucide-react';
 import { useDrop } from 'react-dnd';
 import axios from 'axios';
 import MessageInput from './MessageInput';
@@ -35,6 +35,7 @@ const Message = ({ content, type, onAddApi, apis, allApis, onGenerateCode }) => 
         <span 
           className="api-suggestion-button api-suggestion-disabled"
           title="API not available"
+          style={{ background: '#gray' }}
         >
           {apiName} (Unavailable)
         </span>
@@ -49,6 +50,9 @@ const Message = ({ content, type, onAddApi, apis, allApis, onGenerateCode }) => 
         onClick={() => !isAlreadyAdded && onAddApi(apiData)}
         className={`api-suggestion-button ${isAlreadyAdded ? 'api-suggestion-disabled' : ''}`}
         disabled={isAlreadyAdded}
+        style={{ 
+          background: getCategoryColor(apiData.Category)
+        }}
       >
         {isAlreadyAdded ? `${apiData.Name} (Added)` : apiData.Name}
       </button>
@@ -99,7 +103,7 @@ const Message = ({ content, type, onAddApi, apis, allApis, onGenerateCode }) => 
                 <h3 className="text-lg font-bold mt-6 mb-3">
                   {children}
                 </h3>
-                {children === 'Business Concepts' && (
+                {children === 'Business Concept' && (
                   <CodeGenerationButton idea={content} />
                 )}
               </div>
@@ -137,6 +141,7 @@ const Message = ({ content, type, onAddApi, apis, allApis, onGenerateCode }) => 
 const EnhancedAiInterface = ({ 
   activeNodes, 
   onAddNode, 
+  onRemoveNode,
   apis, 
   setIsInterfaceExpanded,
   isCollapsed,
@@ -148,6 +153,8 @@ const EnhancedAiInterface = ({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isTyping, setIsTyping] = useState(false);
+  const [currentView, setCurrentView] = useState('chat'); // 'chat' or 'mockup'
+  const [mockupData, setMockupData] = useState(null);
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
   const interfaceRef = useRef(null);
@@ -256,56 +263,25 @@ ${activeNodesContext}
 ${suggestedApisContext}
 
 Guidelines for responses:
-1. Structure your responses clearly with markdown headings
-2. Be thorough yet concise in your analysis
-3. Use bullet points for better readability
-4. Save API suggestions for the end, only if relevant
+1. Present ONE business concept at a time
+2. Structure your response clearly with markdown headings
+3. Be thorough yet concise in your analysis
+4. Use bullet points for better readability
 
 When responding, follow this structure:
-
 ### Initial Exploration
-- Brief overview of the combined API capabilities
-- Key opportunities and synergies
-- Potential market gaps to address
+Brief overview of the API's capabilities and potential use cases
 
-### Business Concepts
-For each concept:
-- Clear problem statement
-- Target audience analysis
+### Business Concept
+- Problem
+- Value Prop (two detailed sentences explaining the solution and its unique benefits)
+- Target audience
 - Revenue model
-- Unique value proposition
-- Technical feasibility
-
-### Market Analysis
-- Market size and trends
-- Competitive landscape
-- Growth opportunities
-
-### Next Steps
-- Implementation considerations
-- Key challenges to address
-- Suggested development phases
 
 ### Potential API Enhancements (Optional)
-Only if relevant to the discussion, suggest 1-2 APIs using [[API Name]] syntax with clear justification.
-
-Example response:
-"### Initial Exploration
-The combination of Weather API and Transportation data creates powerful opportunities for optimizing travel experiences and logistics operations.
-- Real-time weather integration with route planning
-- Predictive analytics for travel disruptions
-- Enhanced safety through weather-aware navigation
-
-### Business Concepts
-
-1. Smart Route Optimization Platform
-   - Problem: Logistics companies struggle with weather-related delays
-   - Target: Fleet managers and logistics companies
-   - Revenue: Tiered subscription model
-   - Value Prop: AI-powered weather-aware route optimization
-   - Technical: Feasible with current API capabilities
-
-[Additional concepts...]"
+Only if relevant to the discussion, suggest 1-2 APIs using [[API Name]] syntax in this format:
+- [[API Name]] - Brief description of how it enhances the solution
+- [[API Name]] - Brief description of how it enhances the solution
 
 Remember: Focus on value creation and thorough analysis before suggesting technical solutions.`
     };
@@ -387,44 +363,40 @@ Remember: Focus on value creation and thorough analysis before suggesting techni
     }
   }, [activeNodes, isCollapsed]);
 
-  const showInterface = isDraggingApiCard || isExpanded || activeNodes.length > 0;
-
   const handleGenerateCode = async (businessIdea) => {
-    const freeApisInUse = activeNodes.filter(node => 
-      freeApis.includes(node.name)
-    );
-
-    if (freeApisInUse.length === 0) {
-      addMessage('assistant', "Please use at least one free API to generate a code example.");
-      return;
-    }
-
     addMessage('thinking', 'Generating web application...');
 
     try {
       const response = await axios.post('http://localhost:5000/api/create-mockup', {
         businessIdea,
-        activeApis: freeApisInUse
+        activeApis: activeNodes
       });
 
       const { mockupUrl, mockupCode } = response.data;
+      
+      setMockupData({
+        url: mockupUrl,
+        code: mockupCode
+      });
+      
+      setCurrentView('mockup');
+
+      const apisRequiringAuth = activeNodes.filter(api => api.Auth === 'apiKey' || api.Auth === 'OAuth');
+      const authNote = apisRequiringAuth.length > 0 
+        ? `\n\n> Note: This mockup uses placeholder data for APIs requiring authentication (${apisRequiringAuth.map(api => api.name).join(', ')}). You'll need to obtain API keys to use these APIs in production.`
+        : '';
 
       addMessage('assistant', `
 ### Generated Web Application
 
-The application has been generated and is ready to view. You can:
-1. View the live application: [Open Application](${mockupUrl})
-2. Review the source code below
+The application has been generated successfully! You can:
+1. Toggle between chat and mockup views using the buttons above
+2. Review the source code below${authNote}
 
 ### Source Code
 \`\`\`html
 ${mockupCode}
 \`\`\`
-
-### Launch Application
-<button onclick="window.open('${mockupUrl}', '_blank')" class="launch-preview-button">
-  Launch Application
-</button>
 `);
 
     } catch (error) {
@@ -435,54 +407,110 @@ ${mockupCode}
     setMessages(prev => prev.filter(m => m.role !== 'thinking'));
   };
 
+  const showInterface = isDraggingApiCard || isExpanded || activeNodes.length > 0;
+
   return (
     <div 
       ref={interfaceRef}
       className={`enhanced-ai-interface ${showInterface ? 'show' : ''} ${isExpanded ? 'expanded' : ''}`}
     >
-      <h3>API Combination Ideas</h3>
+      <div className="interface-header">
+        <h3>API Combination Ideas</h3>
+        <div className="view-toggle-buttons">
+          <button
+            className={`view-toggle-button ${currentView === 'chat' ? 'active' : ''}`}
+            onClick={() => setCurrentView('chat')}
+            disabled={!mockupData && currentView === 'chat'}
+          >
+            <MessageSquare size={16} />
+            Chat
+          </button>
+          <button
+            className={`view-toggle-button ${currentView === 'mockup' ? 'active' : ''}`}
+            onClick={() => setCurrentView('mockup')}
+            disabled={!mockupData}
+          >
+            <Layout size={16} />
+            Mockup
+          </button>
+        </div>
+      </div>
       
       <div className="selected-apis-section">
         {activeNodes.map((api, index) => (
-          <div key={index} className="mini-api-card">
+          <div 
+            key={index} 
+            className="mini-api-card"
+            style={{ 
+              background: getCategoryColor(api.category),
+              color: '#fff'  // Make text white for better contrast
+            }}
+          >
             <div className="api-name">{api.name}</div>
+            <div 
+              className="delete-button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onRemoveNode(api);
+              }}
+            >
+              ×
+            </div>
           </div>
         ))}
       </div>
 
-      <div className="ai-response">
-        {error ? (
-          <div className="error-message">{error}</div>
-        ) : (
-          <div>
-            {messages.length === 0 ? (
-              <p>Drop some API cards or describe your project idea to get started!</p>
+      {currentView === 'chat' ? (
+        <>
+          <div className="ai-response">
+            {error ? (
+              <div className="error-message">{error}</div>
             ) : (
-              messages.map((message, index) => (
-                <Message
-                  key={index}
-                  type={message.role}
-                  content={message.content}
-                  onAddApi={onAddNode}
-                  apis={activeNodes}
-                  allApis={apis}
-                  onGenerateCode={handleGenerateCode}
-                />
-              ))
+              <div>
+                {messages.length === 0 ? (
+                  <p>Drop some API cards or describe your project idea to get started!</p>
+                ) : (
+                  messages.map((message, index) => (
+                    <Message
+                      key={index}
+                      type={message.role}
+                      content={message.content}
+                      onAddApi={onAddNode}
+                      apis={activeNodes}
+                      allApis={apis}
+                      onGenerateCode={handleGenerateCode}
+                    />
+                  ))
+                )}
+                {isTyping && (
+                  <div className="typing-indicator">Assistant is typing...</div>
+                )}
+                <div ref={messagesEndRef} />
+              </div>
             )}
-            {isTyping && (
-              <div className="typing-indicator">Assistant is typing...</div>
-            )}
-            <div ref={messagesEndRef} />
           </div>
-        )}
-      </div>
-      
-      <MessageInput 
-        onSubmit={handleMessageSubmit}
-        isLoading={isLoading}
-        isExpanded={isExpanded}
-      />
+          <MessageInput 
+            onSubmit={handleMessageSubmit}
+            isLoading={isLoading}
+            isExpanded={isExpanded}
+          />
+        </>
+      ) : (
+        <div className="mockup-view">
+          {mockupData ? (
+            <iframe
+              src={mockupData.url}
+              title="Application Mockup"
+              className="mockup-frame"
+              sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-downloads"
+            />
+          ) : (
+            <div className="no-mockup-message">
+              No mockup generated yet. Use the chat to generate one!
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };

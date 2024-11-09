@@ -68,6 +68,10 @@ function App() {
     setIsInterfaceExpanded(true);
   }, []);
 
+  const handleRemoveNode = (apiToRemove) => {
+    setActiveNodes(prevNodes => prevNodes.filter(node => node.id !== apiToRemove.id));
+  };
+
   const onDragStart = useCallback(() => {
     setIsDraggingApiCard(true);
   }, []);
@@ -137,6 +141,7 @@ function App() {
           <EnhancedAiInterface 
             activeNodes={activeNodes}
             onAddNode={handleAddNode}
+            onRemoveNode={handleRemoveNode}
             apis={randomizedApis}
             setIsInterfaceExpanded={setIsInterfaceExpanded}
             isCollapsed={false}
