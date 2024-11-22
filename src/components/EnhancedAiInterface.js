@@ -1,12 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Send, Code, MessageSquare, Layout } from 'lucide-react';
+import { Send, MessageSquare } from 'lucide-react';
 import { useDrop } from 'react-dnd';
 import axios from 'axios';
 import MessageInput from './MessageInput';
 import ReactMarkdown from 'react-markdown';
-import { getCategoryColor } from '../categoryData';
+import { getCategoryColor, groupedCategories } from '../categoryData';
 
-const Message = ({ content, type, onAddApi, apis, allApis, onGenerateCode }) => {
+const Message = ({ content, type, onAddApi, apis, allApis }) => {
   const findMatchingApi = (suggestedName) => {
     let api = allApis.find(api => api.Name === suggestedName);
     
@@ -74,16 +74,6 @@ const Message = ({ content, type, onAddApi, apis, allApis, onGenerateCode }) => 
     });
   };
 
-  const CodeGenerationButton = ({ idea }) => (
-    <button
-      onClick={() => onGenerateCode(idea)}
-      className="code-generation-button"
-    >
-      <Code size={16} />
-      Generate Sample Code
-    </button>
-  );
-
   const renderContent = (content) => {
     if (type === 'assistant') {
       return (
@@ -103,9 +93,6 @@ const Message = ({ content, type, onAddApi, apis, allApis, onGenerateCode }) => 
                 <h3 className="text-lg font-bold mt-6 mb-3">
                   {children}
                 </h3>
-                {children === 'Business Concept' && (
-                  <CodeGenerationButton idea={content} />
-                )}
               </div>
             ),
             ul: ({children}) => (
@@ -153,8 +140,6 @@ const EnhancedAiInterface = ({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [isTyping, setIsTyping] = useState(false);
-  const [currentView, setCurrentView] = useState('chat'); // 'chat' or 'mockup'
-  const [mockupData, setMockupData] = useState(null);
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
   const interfaceRef = useRef(null);
@@ -173,8 +158,39 @@ const EnhancedAiInterface = ({
 
   const findRelevantApis = (input, activeApis, allApis) => {
     const keywords = input.toLowerCase().split(/\s+/);
-    const activeApiCategories = new Set(activeApis.map(api => api.category));
     
+    // Get the main category groups from groupedCategories
+    const mainCategoryGroups = {
+      "Technology & Development": ["Business & Finance", "Security", "Open Data"],
+      "Business & Finance": ["Technology & Development", "Government & Society", "Social & Personal"],
+      "Government & Society": ["Business & Finance", "Open Data", "Social & Personal"],
+      "Entertainment & Media": ["Social & Personal", "Arts & Culture", "Education & Knowledge"],
+      "Lifestyle & Health": ["Social & Personal", "Nature & Animals", "Transportation & Location"],
+      "Education & Knowledge": ["Entertainment & Media", "Science & Math", "Technology & Development"],
+      "Arts & Culture": ["Entertainment & Media", "Social & Personal", "Education & Knowledge"],
+      "Transportation & Location": ["Nature & Animals", "Lifestyle & Health", "Government & Society"],
+      "Nature & Animals": ["Environment", "Science & Math", "Lifestyle & Health"],
+      "Utilities & Tools": ["Technology & Development", "Business & Finance", "Education & Knowledge"],
+      "Social & Personal": ["Entertainment & Media", "Lifestyle & Health", "Business & Finance"]
+    };
+
+    // Helper function to get main category for a subcategory
+    const getMainCategory = (subcategory) => {
+      for (const [main, { subcategories }] of Object.entries(groupedCategories)) {
+        if (subcategories.includes(subcategory)) {
+          return main;
+        }
+      }
+      return null;
+    };
+
+    // Get active main categories
+    const activeMainCategories = new Set(
+      activeApis
+        .map(api => getMainCategory(api.category))
+        .filter(Boolean)
+    );
+
     return allApis
       .filter(api => {
         if (activeApis.some(active => active.name === api.Name)) {
@@ -183,38 +199,56 @@ const EnhancedAiInterface = ({
 
         const description = (api.Description || '').toLowerCase();
         const name = (api.Name || '').toLowerCase();
-        const category = (api.Category || '').toLowerCase();
-
+        const apiMainCategory = getMainCategory(api.Category);
+        const isAiModel = api.isAiModel;
+        
         let score = 0;
-        keywords.forEach(keyword => {
-          if (name.includes(keyword)) score += 3;
-          if (description.includes(keyword)) score += 2;
-          if (category.includes(keyword)) score += 1;
-        });
 
-        if (activeApiCategories.has(api.Category)) {
+        // Boost score for AI models when relevant keywords are present
+        if (isAiModel && (
+          input.toLowerCase().includes('ai') ||
+          input.toLowerCase().includes('model') ||
+          input.toLowerCase().includes('machine learning')
+        )) {
           score += 2;
         }
 
-        const complementaryPairs = {
-          'Cryptocurrency': ['Finance', 'Business'],
-          'Weather': ['Transportation', 'Travel'],
-          'News': ['Social', 'Data'],
-          'Transportation': ['Maps', 'Weather', 'Location'],
-          'Calendar': ['Events', 'Social'],
-        };
-
-        activeApiCategories.forEach(activeCategory => {
-          if (complementaryPairs[activeCategory]?.includes(api.Category)) {
-            score += 1;
-          }
+        // Keyword matching
+        keywords.forEach(keyword => {
+          if (name.includes(keyword)) score += 3;
+          if (description.includes(keyword)) score += 2;
         });
+
+        // Score complementary categories
+        if (apiMainCategory) {
+          activeMainCategories.forEach(activeCategory => {
+            if (mainCategoryGroups[activeCategory]?.includes(apiMainCategory)) {
+              score += 2;
+            }
+          });
+        }
+
+        // Add randomness to encourage diversity
+        if (Math.random() < 0.3) {
+          score += 2;
+        }
+
+        // Boost score for APIs from different main categories
+        if (apiMainCategory && !activeMainCategories.has(apiMainCategory)) {
+          score += 1;
+        }
 
         return score > 0;
       })
       .sort((a, b) => {
-        const aScore = activeApiCategories.has(a.Category) ? 2 : 1;
-        const bScore = activeApiCategories.has(b.Category) ? 2 : 1;
+        const randomFactor = Math.random() * 0.4 - 0.2;
+        const aMainCategory = getMainCategory(a.Category);
+        const bMainCategory = getMainCategory(b.Category);
+        
+        // Prioritize APIs from different main categories
+        const aScore = (!activeMainCategories.has(aMainCategory) ? 3 : 1) + randomFactor;
+        const bScore = (!activeMainCategories.has(bMainCategory) ? 3 : 1) + randomFactor;
+        
         return bScore - aScore;
       })
       .slice(0, 5);
@@ -259,7 +293,11 @@ const EnhancedAiInterface = ({
       content: `You are an AI assistant specialized in helping users explore innovative ideas and applications. Your primary focus is on understanding their goals and developing creative business concepts.
 
 Current context:
-${activeNodesContext}
+${activeNodes.map(node => {
+  const type = node.isAiModel ? 'AI Model' : 'API';
+  return `• ${node.name} (${type} - ${node.category}): ${node.description}`;
+}).join('\n')}
+
 ${suggestedApisContext}
 
 Guidelines for responses:
@@ -267,21 +305,22 @@ Guidelines for responses:
 2. Structure your response clearly with markdown headings
 3. Be thorough yet concise in your analysis
 4. Use bullet points for better readability
+5. When suggesting AI models, explain how they complement the APIs
 
 When responding, follow this structure:
 ### Initial Exploration
-Brief overview of the API's capabilities and potential use cases
+Brief overview of the capabilities
 
 ### Business Concept
-- Problem
-- Value Prop (two detailed sentences explaining the solution and its unique benefits)
-- Target audience
-- Revenue model
+-Problem
+Value Prop (two detailed sentences explaining the solution and its unique benefits)
+Target audience
+Revenue model
 
-### Potential API Enhancements (Optional)
-Only if relevant to the discussion, suggest 1-2 APIs using [[API Name]] syntax in this format:
-- [[API Name]] - Brief description of how it enhances the solution
-- [[API Name]] - Brief description of how it enhances the solution
+### Potential Enhancements (Optional)
+Only if relevant to the discussion, suggest 1-2 APIs or AI models using [[Name]] syntax:
+- [[Name]] - Brief description of how it enhances the solution
+- [[Name]] - Brief description of how it enhances the solution
 
 Remember: Focus on value creation and thorough analysis before suggesting technical solutions.`
     };
@@ -363,48 +402,12 @@ Remember: Focus on value creation and thorough analysis before suggesting techni
     }
   }, [activeNodes, isCollapsed]);
 
-  const handleGenerateCode = async (businessIdea) => {
-    addMessage('thinking', 'Generating web application...');
-
-    try {
-      const response = await axios.post('http://localhost:5000/api/create-mockup', {
-        businessIdea,
-        activeApis: activeNodes
-      });
-
-      const { mockupUrl, mockupCode } = response.data;
-      
-      setMockupData({
-        url: mockupUrl,
-        code: mockupCode
-      });
-      
-      setCurrentView('mockup');
-
-      const apisRequiringAuth = activeNodes.filter(api => api.Auth === 'apiKey' || api.Auth === 'OAuth');
-      const authNote = apisRequiringAuth.length > 0 
-        ? `\n\n> Note: This mockup uses placeholder data for APIs requiring authentication (${apisRequiringAuth.map(api => api.name).join(', ')}). You'll need to obtain API keys to use these APIs in production.`
-        : '';
-
-      addMessage('assistant', `
-### Generated Web Application
-
-The application has been generated successfully! You can:
-1. Toggle between chat and mockup views using the buttons above
-2. Review the source code below${authNote}
-
-### Source Code
-\`\`\`html
-${mockupCode}
-\`\`\`
-`);
-
-    } catch (error) {
-      console.error('Error generating application:', error);
-      addMessage('assistant', 'Sorry, there was an error generating the application. Please try again.');
+  const handleRemoveNode = (api) => {
+    onRemoveNode(api);
+    // If this was the last API, collapse the interface
+    if (activeNodes.length === 1) {
+      setIsInterfaceExpanded(false);
     }
-
-    setMessages(prev => prev.filter(m => m.role !== 'thinking'));
   };
 
   const showInterface = isDraggingApiCard || isExpanded || activeNodes.length > 0;
@@ -416,24 +419,6 @@ ${mockupCode}
     >
       <div className="interface-header">
         <h3>API Combination Ideas</h3>
-        <div className="view-toggle-buttons">
-          <button
-            className={`view-toggle-button ${currentView === 'chat' ? 'active' : ''}`}
-            onClick={() => setCurrentView('chat')}
-            disabled={!mockupData && currentView === 'chat'}
-          >
-            <MessageSquare size={16} />
-            Chat
-          </button>
-          <button
-            className={`view-toggle-button ${currentView === 'mockup' ? 'active' : ''}`}
-            onClick={() => setCurrentView('mockup')}
-            disabled={!mockupData}
-          >
-            <Layout size={16} />
-            Mockup
-          </button>
-        </div>
       </div>
       
       <div className="selected-apis-section">
@@ -443,7 +428,7 @@ ${mockupCode}
             className="mini-api-card"
             style={{ 
               background: getCategoryColor(api.category),
-              color: '#fff'  // Make text white for better contrast
+              color: '#fff'
             }}
           >
             <div className="api-name">{api.name}</div>
@@ -451,7 +436,7 @@ ${mockupCode}
               className="delete-button"
               onClick={(e) => {
                 e.stopPropagation();
-                onRemoveNode(api);
+                handleRemoveNode(api);
               }}
             >
               ×
@@ -460,57 +445,37 @@ ${mockupCode}
         ))}
       </div>
 
-      {currentView === 'chat' ? (
-        <>
-          <div className="ai-response">
-            {error ? (
-              <div className="error-message">{error}</div>
+      <div className="ai-response">
+        {error ? (
+          <div className="error-message">{error}</div>
+        ) : (
+          <div>
+            {messages.length === 0 ? (
+              <p>Drop some API cards or describe your project idea to get started!</p>
             ) : (
-              <div>
-                {messages.length === 0 ? (
-                  <p>Drop some API cards or describe your project idea to get started!</p>
-                ) : (
-                  messages.map((message, index) => (
-                    <Message
-                      key={index}
-                      type={message.role}
-                      content={message.content}
-                      onAddApi={onAddNode}
-                      apis={activeNodes}
-                      allApis={apis}
-                      onGenerateCode={handleGenerateCode}
-                    />
-                  ))
-                )}
-                {isTyping && (
-                  <div className="typing-indicator">Assistant is typing...</div>
-                )}
-                <div ref={messagesEndRef} />
-              </div>
+              messages.map((message, index) => (
+                <Message
+                  key={index}
+                  type={message.role}
+                  content={message.content}
+                  onAddApi={onAddNode}
+                  apis={activeNodes}
+                  allApis={apis}
+                />
+              ))
             )}
+            {isTyping && (
+              <div className="typing-indicator">Assistant is typing...</div>
+            )}
+            <div ref={messagesEndRef} />
           </div>
-          <MessageInput 
-            onSubmit={handleMessageSubmit}
-            isLoading={isLoading}
-            isExpanded={isExpanded}
-          />
-        </>
-      ) : (
-        <div className="mockup-view">
-          {mockupData ? (
-            <iframe
-              src={mockupData.url}
-              title="Application Mockup"
-              className="mockup-frame"
-              sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals allow-downloads"
-            />
-          ) : (
-            <div className="no-mockup-message">
-              No mockup generated yet. Use the chat to generate one!
-            </div>
-          )}
-        </div>
-      )}
+        )}
+      </div>
+      <MessageInput 
+        onSubmit={handleMessageSubmit}
+        isLoading={isLoading}
+        isExpanded={isExpanded}
+      />
     </div>
   );
 };

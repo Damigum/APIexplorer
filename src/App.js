@@ -5,9 +5,11 @@ import { Database, Cpu, BookOpen, Blocks, Filter } from 'lucide-react';
 import ApiList from './components/ApiList';
 import Pagination from './components/Pagination';
 import EnhancedAiInterface from './components/EnhancedAiInterface';
+import AiModelList from './components/AiModelList';
 import apiData from './apiData.json';
 import { getCategoryColor } from './categoryData';
 import './App.css';
+import axios from 'axios';
 
 const freeApis = [
   'HTTP Cat', 'HTTP Dogs', 'RandomDog', 'RandomFox', 'Shibe.Online',
@@ -40,6 +42,7 @@ function App() {
   const [isInterfaceExpanded, setIsInterfaceExpanded] = useState(false);
   const [isDraggingApiCard, setIsDraggingApiCard] = useState(false);
   const [showFreeOnly, setShowFreeOnly] = useState(false);
+  const [aiModels, setAiModels] = useState([]);
 
   useEffect(() => {
     const flattenedApis = Object.values(apiData).flat();
@@ -49,6 +52,40 @@ function App() {
     setRandomizedApis(shuffleArray(filteredApis));
     setCurrentPage(1);
   }, [showFreeOnly]);
+
+  useEffect(() => {
+    const fetchModels = async () => {
+      try {
+        const response = await axios.get('https://huggingface.co/api/models', {
+          params: {
+            limit: 1000,
+          },
+          headers: {
+            Authorization: `Bearer ${process.env.REACT_APP_HUGGING_FACE_TOKEN}`,
+          },
+        });
+
+        const formattedModels = response.data.map((model) => ({
+          Name: model.id,
+          Description: model.cardData?.description || 
+                      model.description || 
+                      model.tagline || 
+                      'No description available',
+          URL: `https://huggingface.co/${model.id}`,
+          Category: model.pipeline_tag || 'Language Model',
+          Downloads: model.downloads,
+          Likes: model.likes,
+          isAiModel: true
+        }));
+        
+        setAiModels(formattedModels);
+      } catch (error) {
+        console.error('Error fetching AI models:', error);
+      }
+    };
+    
+    fetchModels();
+  }, []);
 
   const indexOfLastApi = currentPage * apisPerPage;
   const indexOfFirstApi = indexOfLastApi - apisPerPage;
@@ -125,24 +162,30 @@ function App() {
         </div>
         <div className={`main-container ${isInterfaceExpanded ? 'expanded' : ''}`}>
           <div className="api-list-container">
-            <ApiList 
-              apis={currentApis} 
-              getCategoryColor={getCategoryColor}
-              onDragStart={onDragStart}
-              onDragEnd={onDragEnd}
-            />
-            <Pagination
-              apisPerPage={apisPerPage}
-              totalApis={randomizedApis.length}
-              paginate={paginate}
-              currentPage={currentPage}
-            />
+            {activeTab === 'apis' && (
+              <>
+                <ApiList 
+                  apis={currentApis} 
+                  getCategoryColor={getCategoryColor}
+                  onDragStart={onDragStart}
+                  onDragEnd={onDragEnd}
+                />
+                <Pagination
+                  apisPerPage={apisPerPage}
+                  totalApis={randomizedApis.length}
+                  paginate={paginate}
+                  currentPage={currentPage}
+                />
+              </>
+            )}
+            {activeTab === 'aiModels' && <AiModelList />}
+            {/* ... other tabs ... */}
           </div>
           <EnhancedAiInterface 
             activeNodes={activeNodes}
             onAddNode={handleAddNode}
             onRemoveNode={handleRemoveNode}
-            apis={randomizedApis}
+            apis={[...randomizedApis, ...aiModels]}
             setIsInterfaceExpanded={setIsInterfaceExpanded}
             isCollapsed={false}
             isExpanded={isInterfaceExpanded}

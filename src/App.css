@@ -1063,7 +1063,7 @@ nav::before {
 
 .enhanced-ai-interface.show {
   opacity: 1;
-  width: 26%;
+  width: 24%;
   pointer-events: all;
 }
 
@@ -1836,3 +1836,207 @@ nav::before {
 .delete-button:hover {
   background-color: #ff0000;
 }
+
+/* Add to your existing styles */
+
+.api-card .model-stats {
+  display: flex;
+  gap: 8px;
+  font-size: 0.8em;
+  color: #666;
+  margin-top: 4px;
+}
+
+.api-card .model-tag {
+  display: inline-block;
+  padding: 2px 6px;
+  background: #f3f4f6;
+  border-radius: 4px;
+  font-size: 0.7em;
+  margin: 2px;
+  color: #374151;
+}
+
+.api-card .model-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+/* Add these styles to your existing CSS */
+.ai-models-container {
+  width: 100%;
+  transition: width 0.3s ease;
+}
+
+.load-more-button {
+  padding: 10px 20px;
+  background-color: #4F46E5;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  margin: 20px auto;
+  display: block;
+}
+
+.load-more-button:hover {
+  background-color: #4338CA;
+}
+
+/* Add these new styles for AI models */
+
+.model-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 30px;
+  justify-content: center;
+  max-width: 900px;
+  margin: 20px auto 0;
+}
+
+.model-card {
+  width: 420px;
+  height: 80px;
+  border-radius: 12px;
+  background: linear-gradient(145deg, #ffffff, #fffdfa);
+  box-shadow: 0 1px 25px rgba(0, 0, 0, 0.2);
+  padding: 0;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  cursor: pointer;
+  margin: 0 auto;
+}
+
+.model-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 30px rgba(0, 0, 0, 0.3);
+}
+
+/* Model content layout */
+.model-content {
+  margin: 0;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Avatar/logo area */
+.model-avatar {
+  position: absolute;
+  top: -15px;
+  left: -10px;
+  width: 45px;
+  height: 45px;
+  display: inline-block;
+  background-color: rgba(211, 240, 211, 0.95);
+  margin: 30px 15px 20px 25px;
+  border-radius: 14px;
+}
+
+/* Model info section */
+.model-info {
+  display: inline-block;
+  vertical-align: top;
+  margin-top: 33px;
+  width: 85px;
+}
+
+.model-name {
+  position: absolute;
+  top: 16px;
+  right: 36px;
+  display: inline-block;
+  height: 32px;
+  width: 70%;
+  border-radius: 6px;
+  font-family: Karla;
+  font-weight: 740;
+  color: #333;
+  font-size: 0.9em;
+  padding: 2px 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.model-category {
+  position: absolute;
+  left: 75px;
+  bottom: 6px;
+  height: 15px;
+  width: 45%;
+  border-radius: 3px;
+  font-family: 'Lora', sans-serif;
+  font-size: 0.6em;
+  font-weight: 600;
+  color: #000000;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  margin-top: 5px;
+}
+
+/* Stats section */
+.model-stats {
+  width: 50%;
+  left: 50%;
+  position: absolute;
+  bottom: 10px;
+  border-radius: 12px;
+  height: 20px;
+  margin: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.7em;
+  color: #333;
+}
+
+
+/* Keep category filter styles unchanged */
+.category-filter {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  position: absolute;
+  width: 380px;
+  left: 0;
+}
+
+.category-group {
+  margin-bottom: -10px;
+}
+
+/* Responsive adjustments */
+@media screen and (max-width: 1024px) {
+  .model-list {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .model-list {
+    grid-template-columns: repeat(1, 1fr);
+  }
+  
+  .model-card {
+    width: 280px;
+    height: 180px;
+  }
+}
+
+.model-card-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+.model-card-link:hover {
+  transform: translateY(-2px);
+  transition: transform 0.2s ease;
+}
+
