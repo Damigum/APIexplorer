@@ -232,7 +232,7 @@ const EnhancedAiInterface = ({
       const systemPromptContent = initialPrompt + `\n\nCurrent APIs: ${activeNodes.map(node => `${node.name} (${node.category}): ${node.description}`).join('\n')}`;
 
       // Call backend endpoint
-      const API_URL = 'http://devshii.vercel.app';
+      const API_URL = 'https://devshii.vercel.app';
       const response = await axios.post(`${API_URL}/api/generate-response`, {
         messages: newMessages,
         systemPrompt: systemPromptContent
