@@ -7,6 +7,7 @@ const axios = require('axios');
 const app = express();
 
 const allowedOrigins = [
+  'https://devshii.vercel.app',
   'http://localhost:3000',
   'http://10.0.0.104:3000',
   process.env.ALLOWED_ORIGIN // Your production domain
