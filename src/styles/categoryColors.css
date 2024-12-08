@@ -1,0 +1,34 @@
+:root {
+  /* Technology & Development */
+  --category-technology: #1E88E5;
+  
+  /* Business & Finance */
+  --category-business: #FBC02D;
+  
+  /* Government & Society */
+  --category-government: #00b94d;
+  
+  /* Entertainment & Media */
+  --category-entertainment: #E53935;
+  
+  /* Lifestyle & Health */
+  --category-lifestyle: #00c1b7;
+  
+  /* Education & Knowledge */
+  --category-education: #fb7900;
+  
+  /* Arts & Culture */
+  --category-arts: #d81b9f;
+  
+  /* Transportation & Location */
+  --category-transportation: #2e2e2e;
+  
+  /* Nature & Animals */
+  --category-nature: #caa375;
+  
+  /* Utilities & Tools */
+  --category-utilities: #6f91a1;
+  
+  /* Social & Personal */
+  --category-social: #5E35B1;
+} 

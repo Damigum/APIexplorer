@@ -1,10 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Send, MessageSquare } from 'lucide-react';
+import { Send, MessageSquare, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useDrop } from 'react-dnd';
 import axios from 'axios';
 import MessageInput from './MessageInput';
 import ReactMarkdown from 'react-markdown';
 import { getCategoryColor, groupedCategories } from '../categoryData';
+import { initialPrompt, apiSuggestionPrompt, technicalPrompt, apiCheckPrompt } from '../prompts/systemPrompts';
 
 const Message = ({ content, type, onAddApi, apis, allApis }) => {
   const findMatchingApi = (suggestedName) => {
@@ -30,7 +31,6 @@ const Message = ({ content, type, onAddApi, apis, allApis }) => {
     const apiData = findMatchingApi(apiName);
     
     if (!apiData) {
-      console.log(`API not found: ${apiName}`);
       return (
         <span 
           className="api-suggestion-button api-suggestion-disabled"
@@ -83,7 +83,7 @@ const Message = ({ content, type, onAddApi, apis, allApis }) => {
               <p className="mb-4">
                 {Array.isArray(children) 
                   ? children.map((child, index) => (
-                      <span key={index}>{processText(child)}</span>
+                      <span key={`p-span-${index}`}>{processText(child)}</span>
                     ))
                   : processText(children)}
               </p>
@@ -104,7 +104,7 @@ const Message = ({ content, type, onAddApi, apis, allApis }) => {
               <li className="mb-2">
                 {Array.isArray(children)
                   ? children.map((child, index) => (
-                      <span key={index}>{processText(child)}</span>
+                      <span key={`li-span-${index}`}>{processText(child)}</span>
                     ))
                   : processText(children)}
               </li>
@@ -136,123 +136,47 @@ const EnhancedAiInterface = ({
   isDraggingApiCard,
   freeApis
 }) => {
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState(() => {
+    const savedMessages = localStorage.getItem('chatMessages');
+    return savedMessages ? JSON.parse(savedMessages) : [];
+  });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [isTyping, setIsTyping] = useState(false);
+  const [aiResponses, setAiResponses] = useState(() => {
+    const savedResponses = localStorage.getItem('aiResponses');
+    return savedResponses ? JSON.parse(savedResponses) : [];
+  });
+  const [currentResponseIndex, setCurrentResponseIndex] = useState(() => {
+    const savedIndex = localStorage.getItem('currentResponseIndex');
+    return savedIndex ? parseInt(savedIndex) : 0;
+  });
   const messagesEndRef = useRef(null);
-  const typingTimeoutRef = useRef(null);
   const interfaceRef = useRef(null);
 
-  const addMessage = (role, content) => {
-    setMessages(prev => [...prev, { role, content }]);
-  };
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  // Save state to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('chatMessages', JSON.stringify(messages));
+  }, [messages]);
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages, isLoading]);
+    localStorage.setItem('aiResponses', JSON.stringify(aiResponses));
+  }, [aiResponses]);
 
-  const findRelevantApis = (input, activeApis, allApis) => {
-    const keywords = input.toLowerCase().split(/\s+/);
-    
-    // Get the main category groups from groupedCategories
-    const mainCategoryGroups = {
-      "Technology & Development": ["Business & Finance", "Security", "Open Data"],
-      "Business & Finance": ["Technology & Development", "Government & Society", "Social & Personal"],
-      "Government & Society": ["Business & Finance", "Open Data", "Social & Personal"],
-      "Entertainment & Media": ["Social & Personal", "Arts & Culture", "Education & Knowledge"],
-      "Lifestyle & Health": ["Social & Personal", "Nature & Animals", "Transportation & Location"],
-      "Education & Knowledge": ["Entertainment & Media", "Science & Math", "Technology & Development"],
-      "Arts & Culture": ["Entertainment & Media", "Social & Personal", "Education & Knowledge"],
-      "Transportation & Location": ["Nature & Animals", "Lifestyle & Health", "Government & Society"],
-      "Nature & Animals": ["Environment", "Science & Math", "Lifestyle & Health"],
-      "Utilities & Tools": ["Technology & Development", "Business & Finance", "Education & Knowledge"],
-      "Social & Personal": ["Entertainment & Media", "Lifestyle & Health", "Business & Finance"]
-    };
+  useEffect(() => {
+    localStorage.setItem('currentResponseIndex', currentResponseIndex.toString());
+  }, [currentResponseIndex]);
 
-    // Helper function to get main category for a subcategory
-    const getMainCategory = (subcategory) => {
-      for (const [main, { subcategories }] of Object.entries(groupedCategories)) {
-        if (subcategories.includes(subcategory)) {
-          return main;
-        }
-      }
-      return null;
-    };
-
-    // Get active main categories
-    const activeMainCategories = new Set(
-      activeApis
-        .map(api => getMainCategory(api.category))
-        .filter(Boolean)
-    );
-
-    return allApis
-      .filter(api => {
-        if (activeApis.some(active => active.name === api.Name)) {
-          return false;
-        }
-
-        const description = (api.Description || '').toLowerCase();
-        const name = (api.Name || '').toLowerCase();
-        const apiMainCategory = getMainCategory(api.Category);
-        const isAiModel = api.isAiModel;
-        
-        let score = 0;
-
-        // Boost score for AI models when relevant keywords are present
-        if (isAiModel && (
-          input.toLowerCase().includes('ai') ||
-          input.toLowerCase().includes('model') ||
-          input.toLowerCase().includes('machine learning')
-        )) {
-          score += 2;
-        }
-
-        // Keyword matching
-        keywords.forEach(keyword => {
-          if (name.includes(keyword)) score += 3;
-          if (description.includes(keyword)) score += 2;
-        });
-
-        // Score complementary categories
-        if (apiMainCategory) {
-          activeMainCategories.forEach(activeCategory => {
-            if (mainCategoryGroups[activeCategory]?.includes(apiMainCategory)) {
-              score += 2;
-            }
-          });
-        }
-
-        // Add randomness to encourage diversity
-        if (Math.random() < 0.3) {
-          score += 2;
-        }
-
-        // Boost score for APIs from different main categories
-        if (apiMainCategory && !activeMainCategories.has(apiMainCategory)) {
-          score += 1;
-        }
-
-        return score > 0;
-      })
-      .sort((a, b) => {
-        const randomFactor = Math.random() * 0.4 - 0.2;
-        const aMainCategory = getMainCategory(a.Category);
-        const bMainCategory = getMainCategory(b.Category);
-        
-        // Prioritize APIs from different main categories
-        const aScore = (!activeMainCategories.has(aMainCategory) ? 3 : 1) + randomFactor;
-        const bScore = (!activeMainCategories.has(bMainCategory) ? 3 : 1) + randomFactor;
-        
-        return bScore - aScore;
-      })
-      .slice(0, 5);
-  };
+  // Clear chat history when all APIs are removed
+  useEffect(() => {
+    if (activeNodes.length === 0) {
+      localStorage.removeItem('chatMessages');
+      localStorage.removeItem('aiResponses');
+      localStorage.removeItem('currentResponseIndex');
+      setMessages([]);
+      setAiResponses([]);
+      setCurrentResponseIndex(0);
+    }
+  }, [activeNodes.length]);
 
   const [, drop] = useDrop({
     accept: 'API_CARD',
@@ -266,6 +190,36 @@ const EnhancedAiInterface = ({
     drop(interfaceRef);
   }, [drop]);
 
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, isLoading]);
+
+  const handleRegenerateResponse = async () => {
+    if (isLoading) return;
+    
+    setIsLoading(true);
+    
+    // Create initial message based on current APIs
+    const initialMessage = {
+      role: 'user',
+      content: activeNodes.length === 1
+        ? `I've added ${activeNodes[0].name} to my workspace. What kind of applications could we build with this?`
+        : `I have the following APIs: ${activeNodes.map(node => node.name).join(', ')}. What kind of applications could we build with these?`
+    };
+    
+    // Reset messages and show thinking indicator
+    setMessages([initialMessage, { role: 'thinking', content: 'Thinking...' }]);
+    
+    // Generate new response
+    await generateResponse([initialMessage]);
+    
+    setIsLoading(false);
+  };
+
   const generateResponse = async (newMessages) => {
     if (isLoading) return;
     
@@ -273,82 +227,37 @@ const EnhancedAiInterface = ({
     setError(null);
     setIsInterfaceExpanded(true);
 
-    const lastUserMessage = newMessages.findLast(msg => msg.role === 'user')?.content || '';
-    const relevantApis = findRelevantApis(lastUserMessage, activeNodes, apis);
-    
-    const activeNodesContext = activeNodes.length > 0 
-      ? `Currently active APIs:\n${activeNodes.map(node => 
-          `• ${node.name} (${node.category}): ${node.description}`
-        ).join('\n')}`
-      : 'No APIs currently selected.';
-
-    const suggestedApisContext = relevantApis.length > 0
-      ? `\n\nSuggested complementary APIs:\n${relevantApis.map(api => 
-          `• ${api.Name} (${api.Category}): ${api.Description}`
-        ).join('\n')}`
-      : '';
-
-    const systemPrompt = {
-      role: 'system',
-      content: `You are an AI assistant specialized in helping users explore innovative ideas and applications. Your primary focus is on understanding their goals and developing creative business concepts.
-
-Current context:
-${activeNodes.map(node => {
-  const type = node.isAiModel ? 'AI Model' : 'API';
-  return `• ${node.name} (${type} - ${node.category}): ${node.description}`;
-}).join('\n')}
-
-${suggestedApisContext}
-
-Guidelines for responses:
-1. Present ONE business concept at a time
-2. Structure your response clearly with markdown headings
-3. Be thorough yet concise in your analysis
-4. Use bullet points for better readability
-5. When suggesting AI models, explain how they complement the APIs
-
-When responding, follow this structure:
-### Initial Exploration
-Brief overview of the capabilities
-
-### Business Concept
--Problem
-Value Prop (two detailed sentences explaining the solution and its unique benefits)
-Target audience
-Revenue model
-
-### Potential Enhancements (Optional)
-Only if relevant to the discussion, suggest 1-2 APIs or AI models using [[Name]] syntax:
-- [[Name]] - Brief description of how it enhances the solution
-- [[Name]] - Brief description of how it enhances the solution
-
-Remember: Focus on value creation and thorough analysis before suggesting technical solutions.`
-    };
-
     try {
-      const result = await axios.post(
-        'https://api.groq.com/openai/v1/chat/completions',
-        {
-          model: 'llama-3.1-70b-versatile',
-          messages: [systemPrompt, ...newMessages],
-          max_tokens: 1000,
-          temperature: 0.7,
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${process.env.REACT_APP_GROQ_API_KEY}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+      // Use initial prompt for business idea generation
+      const systemPromptContent = initialPrompt + `\n\nCurrent APIs: ${activeNodes.map(node => `${node.name} (${node.category}): ${node.description}`).join('\n')}`;
 
-      const aiResponse = result.data.choices[0].message.content;
-      addMessage('assistant', aiResponse);
+      // Call backend endpoint
+      const response = await axios.post('http://localhost:3001/api/generate-response', {
+        messages: newMessages,
+        systemPrompt: systemPromptContent
+      });
+
+      const aiResponse = response.data.response;
+
+      if (!aiResponse) {
+        throw new Error('Empty response received from AI');
+      }
+
+      const updatedMessages = [...newMessages, { role: 'assistant', content: aiResponse }];
+      setMessages(updatedMessages);
+
+      setAiResponses(prev => {
+        const newResponses = [...prev, aiResponse];
+        setCurrentResponseIndex(newResponses.length - 1);
+        return newResponses;
+      });
 
     } catch (error) {
-      console.error('Error calling Groq API:', error);
+      console.error('Error in Response Generation:', error);
       setError(
-        error.response?.status === 429
+        error.message === "Empty response received from AI"
+          ? "Failed to generate a response. Please try again."
+          : error.response?.status === 429
           ? "Rate limit exceeded. Please wait a moment before trying again."
           : "An error occurred while generating ideas. Please try again later."
       );
@@ -358,54 +267,46 @@ Remember: Focus on value creation and thorough analysis before suggesting techni
     }
   };
 
-  const handleMessageSubmit = async (message) => {
-    if (isLoading) return;
-    
-    addMessage('user', message);
-    addMessage('thinking', 'Thinking...');
-
-    let retries = 3;
-    while (retries > 0) {
-      try {
-        const messagesToSend = messages
-          .filter(m => m.role !== 'thinking')
-          .concat([{ role: 'user', content: message }]);
-        
-        await generateResponse(messagesToSend);
-        break;
-      } catch (error) {
-        retries--;
-        if (retries === 0) {
-          setError('Failed to get response after multiple attempts. Please try again.');
-          setMessages(prev => prev.filter(m => m.role !== 'thinking'));
-        } else {
-          await new Promise(resolve => setTimeout(resolve, 1000));
-        }
-      }
+  const navigateResponses = (direction) => {
+    if (direction === 'prev' && currentResponseIndex > 0) {
+      setCurrentResponseIndex(prev => prev - 1);
+      setMessages([
+        { role: 'user', content: messages[0].content },
+        { role: 'assistant', content: aiResponses[currentResponseIndex - 1] }
+      ]);
+    } else if (direction === 'next' && currentResponseIndex < aiResponses.length - 1) {
+      setCurrentResponseIndex(prev => prev + 1);
+      setMessages([
+        { role: 'user', content: messages[0].content },
+        { role: 'assistant', content: aiResponses[currentResponseIndex + 1] }
+      ]);
     }
   };
 
   useEffect(() => {
     if (!isCollapsed && activeNodes.length > 0 && !isLoading) {
       const lastAddedNode = activeNodes[activeNodes.length - 1];
+      
+      // Create initial message based on number of APIs
       const initialMessage = {
         role: 'user',
         content: activeNodes.length === 1
-          ? `I've added ${lastAddedNode.name} to my workspace. What kind of applications or business ideas could we build with this?`
-          : `I've added ${lastAddedNode.name} to work with my existing APIs. How could this enhance our application idea?`
+          ? `I've added ${lastAddedNode.name} to my workspace. What kind of applications could we build with this?`
+          : `I have the following APIs: ${activeNodes.map(node => node.name).join(', ')}. What kind of applications could we build with these?`
       };
       
-      setMessages([]);
-      addMessage('user', initialMessage.content);
-      addMessage('thinking', 'Thinking...');
+      // Reset all chat history and start fresh
+      const initialMessages = [initialMessage, { role: 'thinking', content: 'Thinking...' }];
+      setMessages(initialMessages);
       generateResponse([initialMessage]);
+      setAiResponses([]);
+      setCurrentResponseIndex(0);
     }
   }, [activeNodes, isCollapsed]);
 
   const handleRemoveNode = (api) => {
     onRemoveNode(api);
-    // If this was the last API, collapse the interface
-    if (activeNodes.length === 1) {
+    if (activeNodes.length <= 1) {
       setIsInterfaceExpanded(false);
     }
   };
@@ -418,7 +319,17 @@ Remember: Focus on value creation and thorough analysis before suggesting techni
       className={`enhanced-ai-interface ${showInterface ? 'show' : ''} ${isExpanded ? 'expanded' : ''}`}
     >
       <div className="interface-header">
-        <h3>API Combination Ideas</h3>
+
+        <div className="interface-controls">
+          <button 
+            onClick={handleRegenerateResponse}
+            disabled={isLoading}
+            className="refresh-button"
+            title="Regenerate response"
+          >
+            <RefreshCw size={20} />
+          </button>
+        </div>
       </div>
       
       <div className="selected-apis-section">
@@ -450,32 +361,26 @@ Remember: Focus on value creation and thorough analysis before suggesting techni
           <div className="error-message">{error}</div>
         ) : (
           <div>
-            {messages.length === 0 ? (
-              <p>Drop some API cards or describe your project idea to get started!</p>
+            {messages.length === 0 && !activeNodes.length ? (
+              <p>Drop some API cards to get app ideas!</p>
             ) : (
-              messages.map((message, index) => (
-                <Message
-                  key={index}
-                  type={message.role}
-                  content={message.content}
-                  onAddApi={onAddNode}
-                  apis={activeNodes}
-                  allApis={apis}
-                />
-              ))
-            )}
-            {isTyping && (
-              <div className="typing-indicator">Assistant is typing...</div>
+              messages
+                .filter(message => message.role !== 'user')
+                .map((message, index) => (
+                  <Message
+                    key={index}
+                    type={message.role}
+                    content={message.content}
+                    onAddApi={onAddNode}
+                    apis={activeNodes}
+                    allApis={apis}
+                  />
+                ))
             )}
             <div ref={messagesEndRef} />
           </div>
         )}
       </div>
-      <MessageInput 
-        onSubmit={handleMessageSubmit}
-        isLoading={isLoading}
-        isExpanded={isExpanded}
-      />
     </div>
   );
 };

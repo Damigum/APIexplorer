@@ -1,7 +1,8 @@
 export const groupedCategories = {
   "Technology & Development": {
-    color: "#F3A712",
+    color: "var(--category-technology)",
     subcategories: [
+      "Programming",
       "Development",
       "Machine Learning",
       "Continuous Integration",
@@ -13,7 +14,7 @@ export const groupedCategories = {
     ]
   },
   "Business & Finance": {
-    color: "#FF8C42",
+    color: "var(--category-business)",
     subcategories: [
       "Business",
       "Finance",
@@ -24,19 +25,19 @@ export const groupedCategories = {
     ]
   },
   "Government & Society": {
-    color: "#FF674D",
+    color: "var(--category-government)",
     subcategories: [
       "Government",
       "Open Data",
       "Patent",
       "Fraud Prevention",
-      "Disasters",
       "Environment"
     ]
   },
   "Entertainment & Media": {
-    color: "#FF6B6B",
+    color: "var(--category-entertainment)",
     subcategories: [
+      "Entertainment",
       "Music",
       "Video",
       "Games & Comics",
@@ -46,7 +47,7 @@ export const groupedCategories = {
     ]
   },
   "Lifestyle & Health": {
-    color: "#66D7D1",
+    color: "var(--category-lifestyle)",
     subcategories: [
       "Health",
       "Food & Drink",
@@ -56,7 +57,7 @@ export const groupedCategories = {
     ]
   },
   "Education & Knowledge": {
-    color: "#B7C3F3",
+    color: "var(--category-education)",
     subcategories: [
       "Education",
       "Science & Math",
@@ -65,14 +66,14 @@ export const groupedCategories = {
     ]
   },
   "Arts & Culture": {
-    color: "#45B7D1",
+    color: "var(--category-arts)",
     subcategories: [
       "Art & Design",
       "Photography"
     ]
   },
   "Transportation & Location": {
-    color: "#0EBE78",
+    color: "var(--category-transportation)",
     subcategories: [
       "Transportation",
       "Vehicle",
@@ -80,23 +81,24 @@ export const groupedCategories = {
     ]
   },
   "Nature & Animals": {
-    color: "#90BE6D",
+    color: "var(--category-nature)",
     subcategories: [
       "Animals",
       "Weather"
     ]
   },
   "Utilities & Tools": {
-    color: "#F8961E",
+    color: "var(--category-utilities)",
     subcategories: [
       "Documents & Productivity",
       "URL Shorteners",
       "Test Data",
-      "Tracking"
+      "Tracking",
+      "Email"
     ]
   },
   "Social & Personal": {
-    color: "#577590",
+    color: "var(--category-social)",
     subcategories: [
       "Social",
       "Personality"
@@ -104,13 +106,18 @@ export const groupedCategories = {
   }
 };
 
-//const color = "#F4FFFD"
-
 export const getCategoryColor = (category) => {
-  for (const { color, subcategories } of Object.values(groupedCategories)) {
+  for (const [groupName, { color, subcategories }] of Object.entries(groupedCategories)) {
     if (subcategories.includes(category)) {
+      if (typeof window !== 'undefined' && window.getComputedStyle) {
+        const style = getComputedStyle(document.documentElement);
+        const varName = color.match(/var\((.*?)\)/)?.[1];
+        if (varName) {
+          return style.getPropertyValue(varName).trim() || color;
+        }
+      }
       return color;
     }
   }
-  return "#000000"; // Default color if category is not found
+  return "#000000";
 };
