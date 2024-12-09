@@ -4,22 +4,49 @@ const Pagination = ({ apisPerPage, totalApis, paginate, currentPage }) => {
   const pageNumbers = [];
   const totalPages = Math.ceil(totalApis / apisPerPage);
 
-  // Calculate the range of page numbers to show
-  let startPage = Math.max(1, currentPage - 2);
-  let endPage = Math.min(totalPages, startPage + 4);
+  // Check if we're on mobile
+  const isMobile = window.matchMedia('(max-width: 768px)').matches;
+
+  // Desktop view calculations (show 3 numbers)
+  let startPage = Math.max(1, currentPage - 1);
+  let endPage = Math.min(totalPages, startPage + 2);
   
   // Adjust startPage if we're near the end
-  if (endPage - startPage < 4) {
-    startPage = Math.max(1, endPage - 4);
+  if (endPage - startPage < 2) {
+    startPage = Math.max(1, endPage - 2);
+  }
+  
+  // Mobile view calculations
+  if (isMobile) {
+    startPage = Math.max(1, currentPage - 1);
+    endPage = Math.min(totalPages, startPage + 2);
+    if (endPage - startPage < 2) {
+      startPage = Math.max(1, endPage - 2);
+    }
   }
 
   for (let i = startPage; i <= endPage; i++) {
     pageNumbers.push(i);
   }
 
+  const styles = {
+    numberContainer: {
+      display: 'flex',
+      gap: '8px',
+      alignItems: 'center',
+    },
+    pagination: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '16px',
+      listStyle: 'none',
+      padding: 0,
+    },
+  };
+
   return (
     <div className="pagination-container">
-      <ul className="pagination">
+      <ul className="pagination" style={styles.pagination}>
         {currentPage > 1 && (
           <li className="arrow-left">
             <button onClick={() => paginate(currentPage - 1)}>
@@ -28,7 +55,7 @@ const Pagination = ({ apisPerPage, totalApis, paginate, currentPage }) => {
           </li>
         )}
         
-        <div className="number-container">
+        <div className="number-container" style={styles.numberContainer}>
           {startPage > 1 && (
             <>
               <li>

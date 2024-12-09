@@ -434,7 +434,7 @@ h1::before {
 
 .api-description {
   font-size: 0.72em;
-  color: #666;
+  color: #3f3f3f;
   flex-grow: 1;
   overflow: hidden;
   display: -webkit-box;
@@ -530,6 +530,7 @@ nav::before {
   font-family: 'Nunito', sans-serif;
   padding: 3px 8px;
   min-width: 32px;
+  height: 32px;
   border: 1px solid #000000;
   background-color: white;
   color: #2e0baf;
@@ -3221,14 +3222,61 @@ nav::before {
   z-index: 1002;
 }
 
+.pagination-container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  transition: width 0.3s ease;
+  background-color: #eaf0f5;
+  padding: 0px;
+  padding-bottom: 12px;
+  padding-top: 20px;
+  z-index: 1000;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: nowrap;
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  max-width: 900px;
+  background-color: #eaf0f5;
+  margin-left: auto;
+  margin-right: auto;
+  gap: 2px;
+  position: relative;
+  min-width: 300px;
+}
+
+.pagination button {
+  font-family: 'Nunito', sans-serif;
+  padding: 3px 8px;
+  min-width: 32px;
+  height: 42px;
+  border: 1px solid #000000;
+  background-color: white;
+  color: #2e0baf;
+  cursor: pointer;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  font-size: 0.8em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .pagination li.arrow-left {
   position: absolute;
-  left: 2%;
+  left: 4%;
 }
 
 .pagination li.arrow-right {
   position: absolute;
-  right: 2%;
+  right: 4%;
 }
 
 

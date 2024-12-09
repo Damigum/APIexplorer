@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Search, X, Bookmark } from 'lucide-react';
 import { groupedCategories } from '../categoryData';
 
-const ApiFilter = ({ onFilterChange, filters, bookmarkedCount, onBookmarkClick }) => {
+const ApiFilter = ({ onFilterChange, filters, bookmarkedCount, onBookmarkClick, isBookmarkTab }) => {
   const [showCategories, setShowCategories] = useState(false);
   const [searchValue, setSearchValue] = useState('');
 
@@ -58,7 +58,7 @@ const ApiFilter = ({ onFilterChange, filters, bookmarkedCount, onBookmarkClick }
           Categories
         </button>
         <button 
-          className="bookmark-button-search"
+          className={`bookmark-button-search ${isBookmarkTab ? 'active' : ''}`}
           onClick={onBookmarkClick}
         >
           <Bookmark size={18} />
@@ -241,6 +241,26 @@ const ApiFilter = ({ onFilterChange, filters, bookmarkedCount, onBookmarkClick }
             width: 100%;
             margin-top: 8px;
           }
+        }
+
+        .bookmark-button-search {
+          padding: 8px 16px;
+          border: 1px solid #000000;
+          border-radius: 5px;
+          background: white;
+          font-family: 'rubik', sans-serif;
+          font-weight: 400;
+          font-size: 0.9em;
+          cursor: pointer;
+          transition: all 0.2s ease;
+          display: flex;
+          align-items: center;
+          gap: 5px;
+        }
+
+        .bookmark-button-search.active {
+          background-color: #ffd900;
+          color: rgb(0, 0, 0);
         }
       `}</style>
     </div>

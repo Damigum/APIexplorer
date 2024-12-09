@@ -82,6 +82,13 @@ function App() {
     }
   }, []);
 
+  // Add this new effect to handle tab changes
+  useEffect(() => {
+    // Reset filters and current page when switching tabs
+    setFilters({ search: '', category: '' });
+    setCurrentPage(1);
+  }, [activeTab]);
+
   const toggleBookmark = (api) => {
     setBookmarkedApis(prev => {
       const isBookmarked = prev.some(bookmark => bookmark.Name === api.Name);
@@ -236,10 +243,13 @@ function App() {
     fetchModels();
   }, []);
 
-  const filteredApis = filterApis(activeTab === 'bookmarks' ? bookmarkedApis : randomizedApis);
+  const baseApis = activeTab === 'bookmarks' ? bookmarkedApis : randomizedApis;
+  const filteredApis = filterApis(baseApis);
   const indexOfLastApi = currentPage * apisPerPage;
   const indexOfFirstApi = indexOfLastApi - apisPerPage;
-  const currentApis = filteredApis.slice(indexOfFirstApi, indexOfLastApi);
+  const currentApis = activeTab === 'bookmarks' 
+    ? filteredApis 
+    : filteredApis.slice(indexOfFirstApi, indexOfLastApi);
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
@@ -328,7 +338,8 @@ function App() {
                   onFilterChange={setFilters} 
                   filters={filters}
                   bookmarkedCount={bookmarkedApis.length}
-                  onBookmarkClick={() => setActiveTab('bookmarks')}
+                  onBookmarkClick={() => setActiveTab(activeTab === 'bookmarks' ? 'apis' : 'bookmarks')}
+                  isBookmarkTab={activeTab === 'bookmarks'}
                 />
                 <ApiList 
                   apis={currentApis}
@@ -339,12 +350,14 @@ function App() {
                   isBookmarked={isApiBookmarked}
                   onAddToWorkspace={handleAddNode}
                 />
-                <Pagination
-                  apisPerPage={apisPerPage}
-                  totalApis={filteredApis.length}
-                  paginate={paginate}
-                  currentPage={currentPage}
-                />
+                {activeTab !== 'bookmarks' && (
+                  <Pagination
+                    apisPerPage={apisPerPage}
+                    totalApis={filteredApis.length}
+                    paginate={paginate}
+                    currentPage={currentPage}
+                  />
+                )}
               </>
             )}
             {activeTab === 'aiModels' && <AiModelList />}
