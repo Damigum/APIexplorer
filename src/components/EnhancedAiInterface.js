@@ -153,6 +153,66 @@ const EnhancedAiInterface = ({
   const messagesEndRef = useRef(null);
   const interfaceRef = useRef(null);
 
+  // Add new state for position
+  const [position, setPosition] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startY, setStartY] = useState(0);
+  const [currentY, setCurrentY] = useState(0);
+
+  // Touch event handlers
+  const handleTouchStart = (e) => {
+    const touch = e.touches[0];
+    if (e.target.closest('.interface-header')) {
+      setIsDragging(true);
+      setStartY(touch.clientY);
+      document.body.classList.add('dragging');
+    }
+  };
+
+  const handleTouchMove = (e) => {
+    if (!isDragging) return;
+    
+    const touch = e.touches[0];
+    const deltaY = touch.clientY - startY;
+    
+    // Calculate new position with bounds
+    const maxY = window.innerHeight - 80; // Minimum 80px height always visible
+    const newPosition = Math.max(0, Math.min(maxY, position + deltaY));
+    
+    // Update interface position
+    interfaceRef.current.style.transform = `translateY(${newPosition}px)`;
+    setCurrentY(newPosition);
+  };
+
+  const handleTouchEnd = () => {
+    if (!isDragging) return;
+    
+    setIsDragging(false);
+    document.body.classList.remove('dragging');
+    
+    // Save the final position
+    setPosition(currentY);
+    
+    // Update expanded state based on position
+    setIsInterfaceExpanded(currentY < window.innerHeight / 2);
+  };
+
+  // Add touch event listeners
+  useEffect(() => {
+    const element = interfaceRef.current;
+    if (element) {
+      element.addEventListener('touchstart', handleTouchStart, { passive: true });
+      element.addEventListener('touchmove', handleTouchMove, { passive: true });
+      element.addEventListener('touchend', handleTouchEnd);
+
+      return () => {
+        element.removeEventListener('touchstart', handleTouchStart);
+        element.removeEventListener('touchmove', handleTouchMove);
+        element.removeEventListener('touchend', handleTouchEnd);
+      };
+    }
+  }, [isDragging, startY, position]);
+
   // Save state to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem('chatMessages', JSON.stringify(messages));
@@ -317,10 +377,13 @@ const EnhancedAiInterface = ({
   return (
     <div 
       ref={interfaceRef}
-      className={`enhanced-ai-interface ${showInterface ? 'show' : ''} ${isExpanded ? 'expanded' : ''}`}
+      className={`enhanced-ai-interface ${showInterface ? 'show' : ''} ${isExpanded ? 'expanded' : ''} ${isDragging ? 'dragging' : ''}`}
+      style={{
+        transform: `translateY(${position}px)`,
+        transition: isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+      }}
     >
       <div className="interface-header">
-
         <div className="interface-controls">
           <button 
             onClick={handleRegenerateResponse}
