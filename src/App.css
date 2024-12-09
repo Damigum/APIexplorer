@@ -7,18 +7,26 @@ body {
   background-color: #eaf0f5;
   margin: 0;
   padding: 0;
+  padding-bottom: env(safe-area-inset-bottom);
   overflow-y: auto;
   overflow-x: hidden;
+  min-height: -webkit-fill-available;
+}
+
+html {
+  height: -webkit-fill-available;
 }
 
 .App {
   max-width: 100%;
   padding: 20px;
   padding-top: 110px;
-  padding-bottom: 10px;
+  padding-bottom: calc(10px + env(safe-area-inset-bottom));
   font-family: 'Karla', sans-serif;
   position: relative;
   overflow-x: hidden;
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
 }
 
 /* Header container with tabs */
