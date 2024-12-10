@@ -383,6 +383,7 @@ h1::before {
   justify-content: center;
   max-width: 900px;
   margin: 20px auto 0;
+  padding-bottom: 20px;
 }
 
 .api-card {
@@ -828,9 +829,9 @@ nav::before {
   transition: width 0.3s ease;
   background-color: #eaf0f5;
   padding: 0px;
-  padding-bottom: 12px;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom));
   padding-top: 20px;
-  z-index: 1000;
+  z-index: 999; /* Lower than AI interface */
 }
 
 .main-container.expanded .pagination-container {
@@ -987,6 +988,24 @@ nav::before {
   .pagination button {
     padding: 2px 6px;
     font-size: 0.7em;
+  }
+
+  .pagination-container {
+    position: relative; /* Change to relative on mobile */
+    bottom: auto;
+    width: 100% !important; /* Override expanded state */
+    margin-top: 20px;
+    padding-bottom: 20px;
+  }
+
+  .main-container.expanded .api-list-container {
+    padding-bottom: calc(80vh + 60px); /* Add space for pagination */
+  }
+  
+  /* Ensure pagination stays above the AI interface background but below the content */
+  .pagination {
+    position: relative;
+    z-index: 1000;
   }
 }
 
@@ -1331,9 +1350,10 @@ nav::before {
   pointer-events: none;
   border-radius: 8px;
   margin-right: 0px;
-  padding: 0px 0px 0px 0px;
+  padding: 0px;
   display: flex;
   flex-direction: column;
+  z-index: 1001; /* Ensure it's above pagination */
 }
 
 .enhanced-ai-interface.show {
@@ -1401,16 +1421,10 @@ nav::before {
 
 @media screen and (max-width: 768px) {
   .enhanced-ai-interface {
-    height: calc(100vh - 100px);
-    width: 100%;
-    position: fixed;
-    top: auto;
+    height: 80vh;
+    max-height: calc(100vh - 120px); /* Leave space for pagination */
     bottom: 0;
-    right: 0;
-    z-index: 1000;
-    border-top-left-radius: 16px;
-    border-top-right-radius: 16px;
-    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+    top: auto;
   }
   
   .enhanced-ai-interface.show {
@@ -1429,6 +1443,19 @@ nav::before {
   
   .user-idea-input {
     padding: 8px;
+  }
+
+  .enhanced-ai-interface .ai-response {
+    max-height: calc(100% - 140px); /* Adjust for input and header */
+    overflow-y: auto;
+  }
+
+  .message-input-container {
+    position: absolute;
+    bottom: 16px;
+    left: 16px;
+    right: 16px;
+    z-index: 1002; /* Ensure input stays on top */
   }
 }
 
@@ -2931,8 +2958,30 @@ nav::before {
   }
 
   .subtitle {
-    font-size: 1.8em;
-  }
+  position: relative;
+  text-align: center;
+  color: #141414;
+  font-family: 'Tiny5', cursive;
+  font-style: normal;
+  font-size: 2.4em;
+  font-weight: 400;
+  text-shadow: 
+    -1px -1px 0 #000,  
+    1px -1px 0 #000,
+    -1px 1px 0 #000,
+    1px 1px 0 #000,
+    2px 2px 4px rgba(0, 0, 0, 0.2);
+  opacity: 0.9;
+  margin: 0;
+  padding: 0;
+}
+
+.subtitle.scrolled {
+  transform: translateX(-50%) translateY(-50%) scale(0.2);
+  opacity: 0;
+  pointer-events: none;
+  z-index: -1;
+}
 
   .api-list {
     grid-template-columns: 1fr;
@@ -3029,7 +3078,7 @@ nav::before {
 /* Small Mobile Devices */
 @media screen and (max-width: 480px) {
   .App {
-    padding: 80px 8px 80px 8px;
+    padding: 80px 8px 20px 8px;
   }
 
   h1 {
@@ -3038,6 +3087,13 @@ nav::before {
 
   .subtitle {
     font-size: 1.5em;
+  }
+
+  .subtitle.scrolled {
+    transform: translateX(-50%) translateY(-50%) scale(0.2);
+    opacity: 0;
+    pointer-events: none;
+    z-index: -1;
   }
 
   .api-card {
@@ -3065,38 +3121,46 @@ nav::before {
 @media screen and (max-width: 768px) {
   /* Prevent body scroll when AI interface is active */
   body.ai-expanded {
-    overflow: hidden;
-    position: fixed;
+    overflow: auto;
+    position: relative;
     width: 100%;
-    height: 100%;
+    height: auto;
   }
 
   .main-container {
-    height: 100vh;
-    overflow-y: auto;
+    min-height: 100vh;
+    overflow-y: visible;
     -webkit-overflow-scrolling: touch;
-    padding-bottom: 80px; /* Space for AI interface handle */
+    padding-bottom: 0px;
+    touch-action: pan-y;
   }
 
   .api-list-container {
     height: auto;
     min-height: 100%;
     padding-bottom: 20px;
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
   }
 
-  .enhanced-ai-interface.expanded {
-    width: 100%;
-    opacity: 1;
-    pointer-events: all;
-    z-index: 1001;
-    background-color: white;
-    height: 80vh;
+  .api-list {
+    touch-action: pan-y;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .enhanced-ai-interface {
     position: fixed;
-    top: 20vh;
+    bottom: 0;
     left: 0;
     right: 0;
-    bottom: 0;
-    overflow: hidden;
+    width: 100%;
+    height: 80vh;
+    background: white;
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 1000;
+    touch-action: pan-y;
   }
 
   .main-container.expanded {
@@ -3141,7 +3205,7 @@ nav::before {
     box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 1000;
-    touch-action: none;
+    touch-action: pan-y;
   }
 
   .enhanced-ai-interface.dragging {
@@ -3250,9 +3314,13 @@ nav::before {
   transition: width 0.3s ease;
   background-color: #eaf0f5;
   padding: 0px;
-  padding-bottom: 12px;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom));
   padding-top: 20px;
-  z-index: 1000;
+  z-index: 999; /* Lower than AI interface */
+}
+
+.main-container.expanded .pagination-container {
+  width: 50%;
 }
 
 .pagination {
@@ -3305,6 +3373,24 @@ nav::before {
   /* Override the hover state for mobile */
   .api-card:hover .add-to-workspace {
     display: flex;
+  }
+
+  .pagination-container {
+    position: relative; /* Change to relative on mobile */
+    bottom: auto;
+    width: 100% !important; /* Override expanded state */
+    margin-top: 20px;
+    padding-bottom: 20px;
+  }
+
+  .main-container.expanded .api-list-container {
+    padding-bottom: calc(80vh + 60px); /* Add space for pagination */
+  }
+  
+  /* Ensure pagination stays above the AI interface background but below the content */
+  .pagination {
+    position: relative;
+    z-index: 1000;
   }
 }
 
