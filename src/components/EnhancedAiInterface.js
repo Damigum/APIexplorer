@@ -164,7 +164,7 @@ const EnhancedAiInterface = ({
     const touch = e.touches[0];
     if (e.target.closest('.interface-header')) {
       setIsDragging(true);
-      setStartY(touch.clientY);
+      setStartY(touch.clientY - position);
       document.body.classList.add('dragging');
     }
   };
@@ -173,15 +173,20 @@ const EnhancedAiInterface = ({
     if (!isDragging) return;
     
     const touch = e.touches[0];
-    const deltaY = touch.clientY - startY;
+    const newY = touch.clientY - startY;
     
     // Calculate new position with bounds
-    const maxY = window.innerHeight - 80; // Minimum 80px height always visible
-    const newPosition = Math.max(0, Math.min(maxY, position + deltaY));
+    // Add extra safety margin to ensure header is always visible
+    const headerHeight = 60; // Increased height to ensure visibility
+    const safetyMargin = 20; // Additional margin to prevent overscroll
+    const maxY = window.innerHeight - (headerHeight + safetyMargin);
+    const boundedY = Math.max(0, Math.min(maxY, newY));
     
-    // Update interface position
-    interfaceRef.current.style.transform = `translateY(${newPosition}px)`;
-    setCurrentY(newPosition);
+    // Update interface position directly for smoother movement
+    if (interfaceRef.current) {
+      interfaceRef.current.style.transform = `translateY(${boundedY}px)`;
+      setCurrentY(boundedY);
+    }
   };
 
   const handleTouchEnd = () => {
@@ -190,11 +195,23 @@ const EnhancedAiInterface = ({
     setIsDragging(false);
     document.body.classList.remove('dragging');
     
-    // Save the final position
-    setPosition(currentY);
+    // Update position state after drag ends
+    const headerHeight = 60;
+    const safetyMargin = 20;
+    const maxY = window.innerHeight - (headerHeight + safetyMargin);
+    const boundedFinalY = Math.max(0, Math.min(maxY, currentY));
     
-    // Update expanded state based on position
-    setIsInterfaceExpanded(currentY < window.innerHeight / 2);
+    setPosition(boundedFinalY);
+    
+    // Determine if interface should expand based on position
+    const shouldExpand = boundedFinalY < window.innerHeight / 3;
+    setIsInterfaceExpanded(shouldExpand);
+    
+    // If expanding, animate to top
+    if (shouldExpand && interfaceRef.current) {
+      setPosition(0);
+      interfaceRef.current.style.transform = 'translateY(0)';
+    }
   };
 
   // Add touch event listeners
@@ -380,7 +397,7 @@ const EnhancedAiInterface = ({
       className={`enhanced-ai-interface ${showInterface ? 'show' : ''} ${isExpanded ? 'expanded' : ''} ${isDragging ? 'dragging' : ''}`}
       style={{
         transform: `translateY(${position}px)`,
-        transition: isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+        transition: isDragging ? 'none' : 'transform 0.2s ease-out'
       }}
     >
       <div className="interface-header">
