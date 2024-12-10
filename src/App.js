@@ -373,7 +373,6 @@ function App() {
             freeApis={freeApis}
           />
         </div>
-        <Analytics />
       </div>
     </DndProvider>
   );
