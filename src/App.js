@@ -12,7 +12,6 @@ import './App.css';
 import './styles/categoryColors.css';
 import axios from 'axios';
 import ApiFilter from './components/ApiFilter';
-import { Analytics } from "@vercel/analytics/react"
 const freeApis = [
   'HTTP Cat', 'HTTP Dogs', 'RandomDog', 'RandomFox', 'Shibe.Online',
   'Open Library', 'Bhagavad Gita', 'British National Bibliography',
