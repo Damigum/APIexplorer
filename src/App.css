@@ -507,31 +507,12 @@ nav::before {
   padding: 0;
   margin: 0;
   max-width: 900px;
+  background-color: #eaf0f5;
   margin-left: auto;
   margin-right: auto;
   gap: 4px;
   position: relative;
   min-width: 300px;
-}
-
-.pagination li {
-  margin: 2px;
-}
-
-.pagination li.arrow-left {
-  position: absolute;
-  left: 20%;
-}
-
-.pagination li.arrow-right {
-  position: absolute;
-  right: 20%;
-}
-
-.pagination li.ellipsis {
-  padding: 3px 8px;
-  color: #666;
-  font-family: 'Nunito', sans-serif;
 }
 
 .pagination button {
@@ -551,6 +532,16 @@ nav::before {
   justify-content: center;
 }
 
+.pagination li.arrow-left {
+  position: absolute;
+  left: 20%;
+}
+
+.pagination li.arrow-right {
+  position: absolute;
+  right: 20%;
+}
+
 .pagination .number-container {
   display: flex;
   align-items: center;
@@ -562,6 +553,27 @@ nav::before {
 .pagination li.active button {
   background-color: #ffd900;
   color: rgb(0, 0, 0);
+}
+
+/* Mobile styles for pagination */
+@media screen and (max-width: 768px) {
+  .pagination li.arrow-left {
+    left: 15%;
+  }
+
+  .pagination li.arrow-right {
+    right: 15%;
+  }
+
+  .pagination .number-container {
+    margin: 0 20px;
+  }
+
+  .pagination button {
+    min-width: 28px;
+    height: 28px;
+    font-size: 0.75em;
+  }
 }
 
 .api-node {
@@ -3255,7 +3267,7 @@ nav::before {
   background-color: #eaf0f5;
   margin-left: auto;
   margin-right: auto;
-  gap: 2px;
+  gap: 4px;
   position: relative;
   min-width: 300px;
 }
@@ -3277,15 +3289,23 @@ nav::before {
   justify-content: center;
 }
 
-.pagination li.arrow-left {
-  position: absolute;
-  left: 4%;
+/* Mobile: always show the plus icon */
+@media screen and (max-width: 768px) {
+  .add-to-workspace {
+    /* Always display as flex */
+    display: flex;
+    /* Adjust position for better mobile visibility */
+    top: 48px;
+    right: -22px;
+    width: 25px;
+    height: 25px;
+    border-radius: 5px;
+  }
+  
+  /* Override the hover state for mobile */
+  .api-card:hover .add-to-workspace {
+    display: flex;
+  }
 }
-
-.pagination li.arrow-right {
-  position: absolute;
-  right: 4%;
-}
-
 
 
