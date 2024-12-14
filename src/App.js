@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { Database, Cpu, BookOpen, Blocks, Filter, Bookmark, BookmarkX } from 'lucide-react';
+import { Analytics } from '@vercel/analytics/react';
 import ApiList from './components/ApiList';
 import Pagination from './components/Pagination';
 import EnhancedAiInterface from './components/EnhancedAiInterface';
@@ -285,6 +286,7 @@ function App() {
 
   return (
     <DndProvider backend={HTML5Backend}>
+      <Analytics />
       <div className="App">
         <svg style={{ display: 'none' }}>
           <filter id="goo">
